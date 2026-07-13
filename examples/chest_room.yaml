@@ -1,0 +1,59 @@
+# 立位胸部撮影室のサンプルシーン
+# 座標系: cm、z軸が鉛直上向き、床上面が z=0
+# 患者は原点付近に立位、X線管は患者の前方 (-y側) から水平照射
+
+source:
+  type: xray_tube
+  kvp: 120
+  filtration_mm_al: 2.5
+  position: [0, -180, 140]     # 焦点: 患者前方180cm、床上140cm（胸部高さ）
+  direction: [0, 1, 0]         # +y方向（患者→検出器へ水平照射）
+  field:
+    shape: rect
+    size_cm: [35, 43]          # 半切相当
+    sid_cm: 180                # 焦点-受像面距離
+
+geometry:
+  - name: patient_torso
+    shape: cylinder
+    material: soft_tissue
+    axis: z
+    radius_cm: 15
+    height_cm: 60
+    center: [0, -5, 130]       # 胸部中心
+
+  - name: patient_head
+    shape: sphere
+    material: soft_tissue
+    radius_cm: 10
+    center: [0, -5, 172]
+
+  - name: detector_panel
+    shape: box
+    material: aluminum
+    size_cm: [45, 2, 45]
+    center: [0, 14, 140]       # 患者背面の受像器
+
+  - name: floor
+    shape: box
+    material: concrete
+    size_cm: [400, 400, 15]
+    center: [0, 0, -7.5]
+
+  - name: back_wall
+    shape: box
+    material: concrete
+    size_cm: [400, 15, 280]
+    center: [0, 107.5, 140]    # 検出器後方の壁
+
+  - name: control_booth_shield
+    shape: box
+    material: lead
+    size_cm: [2, 100, 210]
+    center: [-160, -150, 105]  # 操作室の鉛遮蔽
+
+tallies:
+  - type: ambient_dose_H10
+    comment: 室内空間線量分布（v0.4で実装予定）
+
+n_histories: 1.0e+8
