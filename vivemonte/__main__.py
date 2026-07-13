@@ -39,6 +39,29 @@ def cmd_preview(args) -> int:
     return 0
 
 
+def cmd_run(args) -> int:
+    from .scene import load_scene
+    from .transport import run_transport
+
+    scene = load_scene(args.scene)
+    if not scene.ok:
+        for e in scene.errors:
+            print(f"[エラー] {e}", file=sys.stderr)
+        return 1
+    for w in scene.warnings:
+        print(f"[警告] {w}")
+
+    result = run_transport(scene, n_histories=int(args.n_histories), seed=args.seed)
+    print(f"histories: {result.n_histories:,}")
+    print(f"吸収（光電）割合: {result.fraction_absorbed:.4f}")
+    print(f"脱出割合: {result.fraction_escaped:.4f}")
+    print(f"平均相互作用回数/光子: {result.mean_scatter_events:.4f}")
+    print("材料別吸収エネルギー [MeV/history合計]:")
+    for name, e_mev in sorted(result.energy_deposited_MeV.items(), key=lambda kv: -kv[1]):
+        print(f"  {name}: {e_mev:.6g}")
+    return 0
+
+
 def cmd_xs(args) -> int:
     import matplotlib
     matplotlib.use("Agg")
@@ -80,6 +103,12 @@ def main() -> int:
     pp.add_argument("-o", "--out")
     pp.add_argument("--title")
     pp.set_defaults(func=cmd_preview)
+
+    pr = sub.add_parser("run", help="光子輸送を実行")
+    pr.add_argument("scene")
+    pr.add_argument("-n", "--n-histories", type=float, default=1e5)
+    pr.add_argument("--seed", type=int, default=None)
+    pr.set_defaults(func=cmd_run)
 
     px = sub.add_parser("xs", help="断面積カーブを描画")
     px.add_argument("materials", nargs="+")
