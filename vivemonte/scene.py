@@ -94,6 +94,13 @@ def validate_scene(raw: dict) -> Scene:
             warnings.append(SceneError("source.filtration_mm_al",
                           f"総濾過 {filt} mmAl は診断装置の法令要件（一般に2.5 mmAl以上）より薄い可能性があります"))
 
+        angle = src.get("anode_angle_deg", 12.0)
+        if not isinstance(angle, (int, float)) or not (5.0 <= angle <= 20.0):
+            warnings.append(SceneError("source.anode_angle_deg",
+                          f"陽極角 {angle!r} — 一般的な診断用X線管は5〜20度です（既定12度を使用、SpekPyスペクトル計算に使用）"))
+            angle = 12.0
+        src["anode_angle_deg"] = float(angle)
+
     # ---- geometry ----
     geoms = raw.get("geometry")
     if not isinstance(geoms, list) or not geoms:

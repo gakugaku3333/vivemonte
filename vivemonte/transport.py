@@ -12,12 +12,16 @@ Woodcock delta-trackingの仮想衝突は不要（空気の広い空間で無駄
 - レイリー: 弾性散乱、エネルギー変化なし。角度分布は簡易的に
   Thomson型 (1+cos²θ)/2 で近似（原子形状因子は未実装、既知の粗さ）
 
-スペクトルはSpekPy未統合のため、Kramers則＋Al濾過減弱による近似で代用
-（README ロードマップ参照）。explicit な scene.source.spectrum
-（[{energy_keV, weight}, ...]）があればそちらを優先する。
+スペクトルはSpekPyで生成する（タングステン陽極、カサレイ物理モデルの
+SpekPy既定値。陽極角は scene.source.anode_angle_deg、既定12度）。
+SpekPy未インストール環境ではKramers則＋Al濾過減弱の粗い近似にフォールバック
+する。explicit な scene.source.spectrum（[{energy_keV, weight}, ...]）が
+あればどちらより優先する。
 """
 from __future__ import annotations
 
+import functools
+import warnings as _warnings
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -28,15 +32,39 @@ from .tally import VoxelGrid, accumulate_track_length
 
 _MEC2_KEV = 511.0
 
+try:
+    import spekpy as _spekpy
+    _HAS_SPEKPY = True
+except ImportError:
+    _spekpy = None
+    _HAS_SPEKPY = False
 
-def _default_spectrum(kvp: float, filtration_mm_al: float, n_bins: int = 60):
+
+@functools.lru_cache(maxsize=32)
+def _spekpy_spectrum(kvp: float, filtration_mm_al: float, anode_angle_deg: float):
+    s = _spekpy.Spek(kvp=kvp, th=anode_angle_deg)
+    s.filter("Al", filtration_mm_al)
+    e_mid, phi = s.get_spectrum(edges=False)
+    w = np.clip(np.asarray(phi, dtype=float), 0.0, None)
+    return np.asarray(e_mid, dtype=float), w / w.sum()
+
+
+def _kramers_fallback_spectrum(kvp: float, filtration_mm_al: float, n_bins: int = 60):
     e = np.linspace(5.0, kvp, n_bins + 1)
     e_mid = 0.5 * (e[:-1] + e[1:])
-    raw = np.clip(e_mid * (kvp - e_mid), 0, None)  # Kramers則（未濾過）
+    raw = np.clip(e_mid * (kvp - e_mid), 0, None)  # Kramers則（未濾過、特性X線なし）
     mu_al = linear_mu("aluminum", e_mid)
     atten = np.exp(-mu_al * filtration_mm_al / 10.0)
     w = raw * atten
     return e_mid, w / w.sum()
+
+
+def _default_spectrum(kvp: float, filtration_mm_al: float, anode_angle_deg: float = 12.0):
+    if _HAS_SPEKPY:
+        return _spekpy_spectrum(float(kvp), float(filtration_mm_al), float(anode_angle_deg))
+    _warnings.warn("spekpy が見つからないためKramers則の粗い近似スペクトルを使用します。"
+                    "`pip install spekpy` を推奨します。", stacklevel=2)
+    return _kramers_fallback_spectrum(kvp, filtration_mm_al)
 
 
 def sample_spectrum(src: dict, n: int, rng: np.random.Generator) -> np.ndarray:
@@ -46,7 +74,8 @@ def sample_spectrum(src: dict, n: int, rng: np.random.Generator) -> np.ndarray:
         w = np.array([s["weight"] for s in spec], dtype=float)
         w = w / w.sum()
     else:
-        e, w = _default_spectrum(src["kvp"], src.get("filtration_mm_al", 2.5))
+        e, w = _default_spectrum(src["kvp"], src.get("filtration_mm_al", 2.5),
+                                  src.get("anode_angle_deg", 12.0))
     return e[rng.choice(len(e), size=n, p=w)]
 
 
