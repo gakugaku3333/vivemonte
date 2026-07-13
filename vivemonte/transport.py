@@ -234,14 +234,73 @@ class BatchResult:
     energy_deposited: dict = field(default_factory=dict)  # 材料名 -> keV
 
 
+@dataclass
+class TrajectoryRecorder:
+    """軌跡記録（小history可視化用）。ループ1周ごとに飛行区間を追記する。
+
+    starts/ends/energies/events/photon_ids はそれぞれ「1反復ぶんの配列」の
+    リストとして貯め、trajectories_to_json() で光子ごとのポリラインにまとめる。
+    event は区間の終端で起きたことを表す文字列:
+      "boundary"（材料境界を通過して継続）, "photoelectric", "compton",
+      "rayleigh", "escape"
+    """
+    starts: list = field(default_factory=list)
+    ends: list = field(default_factory=list)
+    energies: list = field(default_factory=list)
+    events: list = field(default_factory=list)
+    photon_ids: list = field(default_factory=list)
+
+    def record(self, photon_id: np.ndarray, start: np.ndarray, end: np.ndarray,
+               energy_keV: np.ndarray, event: np.ndarray) -> None:
+        self.photon_ids.append(np.asarray(photon_id))
+        self.starts.append(np.asarray(start))
+        self.ends.append(np.asarray(end))
+        self.energies.append(np.asarray(energy_keV, dtype=float))
+        self.events.append(np.asarray(event, dtype=object))
+
+
+def trajectories_to_json(recorder: TrajectoryRecorder) -> list[dict]:
+    """TrajectoryRecorderの飛行区間データを光子ごとのポリラインにまとめる。
+
+    区間はrecorderへの追記順（=輸送ループの反復順）であり、同一photon_idの
+    区間は反復ごとに高々1つしか記録されないため、そのまま連結すれば
+    時系列順のポリラインになる。
+    """
+    if not recorder.photon_ids:
+        return []
+    photon_ids = np.concatenate(recorder.photon_ids)
+    starts = np.concatenate(recorder.starts)
+    ends = np.concatenate(recorder.ends)
+    energies = np.concatenate(recorder.energies)
+    events = np.concatenate(recorder.events)
+
+    by_photon: dict[int, dict] = {}
+    order: list[int] = []
+    for i in range(len(photon_ids)):
+        pid = int(photon_ids[i])
+        traj = by_photon.get(pid)
+        if traj is None:
+            traj = {"points": [starts[i].tolist()], "energies": [], "events": []}
+            by_photon[pid] = traj
+            order.append(pid)
+        traj["points"].append(ends[i].tolist())
+        traj["energies"].append(float(energies[i]))
+        traj["events"].append(str(events[i]))
+
+    return [by_photon[pid] for pid in order]
+
+
 def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
                        geometry: Geometry, rng: np.random.Generator,
-                       grid: VoxelGrid | None = None) -> BatchResult:
+                       grid: VoxelGrid | None = None,
+                       recorder: TrajectoryRecorder | None = None) -> BatchResult:
     """光源サンプリングとは独立な輸送カーネル本体（テストで直接叩ける）。
 
     pos/dirv/energy は呼び出し側の配列を破壊的に更新する。
     grid を渡すと、各飛行区間ごとにカーマのtrack-length estimatorを
     ボクセルグリッドへ積算する（vivemonte/tally.py参照）。
+    recorder を渡すと、各飛行区間を可視化用に記録する（既定Noneで無効、
+    乱数を一切消費しないため同一seedでの輸送結果に影響しない）。
     """
     n = pos.shape[0]
     alive = np.ones(n, dtype=bool)
@@ -262,13 +321,14 @@ def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
         will_interact = tau[idx] < tau_to_boundary
 
         ds = np.where(will_interact, tau[idx] / mu_safe, t_boundary)
+        ends = o + d * ds[:, None]
 
         if grid is not None:
             mu_en_linear = _mu_en_linear_batch(mat, e)
             accumulate_track_length(grid.kerma_keV, grid, o, d, ds, e * mu_en_linear)
             accumulate_track_length(grid.h10_track_pSv_cm3, grid, o, d, ds, h_star_10_per_fluence(e))
 
-        pos[idx] = o + d * ds[:, None]
+        pos[idx] = ends
 
         noninteract = ~will_interact
         gidx = idx[noninteract]
@@ -323,6 +383,16 @@ def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
                 dirv[rayl_idx] = _scatter_direction(dirv[rayl_idx], cos_theta, rng)
                 tau[rayl_idx] = -np.log(rng.random(len(rayl_idx)))
                 n_scatter[rayl_idx] += 1
+
+        if recorder is not None:
+            event = np.full(len(idx), "boundary", dtype=object)
+            event[noninteract & escape] = "escape"
+            if len(iidx) > 0:
+                interact_positions = np.where(interact)[0]
+                event[interact_positions[is_photo]] = "photoelectric"
+                event[interact_positions[is_compt]] = "compton"
+                event[interact_positions[is_rayl]] = "rayleigh"
+            recorder.record(idx, o, ends, e, event)
 
     return BatchResult(n_scatter=n_scatter, absorbed=absorbed, escaped=escaped,
                         final_energy=energy, energy_deposited=energy_deposited)
