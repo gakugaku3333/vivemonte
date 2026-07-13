@@ -2,6 +2,7 @@
 
   python -m vivemonte validate <scene.yaml>
   python -m vivemonte preview  <scene.yaml> [-o out.html]
+  python -m vivemonte trace    <scene.yaml> [-n 200] [--seed 42] [-o out.html]
   python -m vivemonte xs <材料...> [--emin 10] [--emax 150] [-o out.png]
 """
 from __future__ import annotations
@@ -36,6 +37,46 @@ def cmd_preview(args) -> int:
     out = args.out or args.scene.rsplit(".", 1)[0] + "_preview.html"
     write_html(scene, out, title=args.title or f"viveMonte — {args.scene}")
     print(f"プレビューを書き出しました: {out}")
+    return 0
+
+
+_TRACE_MAX_N = 2000
+
+
+def cmd_trace(args) -> int:
+    import numpy as np
+
+    from .geometry import Geometry
+    from .preview import write_html
+    from .scene import load_scene
+    from .transport import (TrajectoryRecorder, sample_source_photons,
+                             transport_photons, trajectories_to_json)
+
+    scene = load_scene(args.scene)
+    if not scene.ok:
+        for e in scene.errors:
+            print(f"[エラー] {e}", file=sys.stderr)
+        return 1
+    for w in scene.warnings:
+        print(f"[警告] {w}")
+
+    n = int(args.n)
+    if n > _TRACE_MAX_N:
+        print(f"[警告] -n={n} は大きすぎるため{_TRACE_MAX_N}にクランプします"
+              "（HTML描画性能のため）")
+        n = _TRACE_MAX_N
+
+    rng = np.random.default_rng(args.seed)
+    geometry = Geometry(scene.raw["geometry"])
+    pos, dirv, energy = sample_source_photons(scene.raw["source"], n, rng)
+    recorder = TrajectoryRecorder()
+    transport_photons(pos, dirv, energy, geometry, rng, recorder=recorder)
+    trajectories = trajectories_to_json(recorder)
+
+    out = args.out or args.scene.rsplit(".", 1)[0] + "_trace.html"
+    write_html(scene, out, title=args.title or f"viveMonte trace — {args.scene}",
+               trajectories=trajectories)
+    print(f"光子{n}個の軌跡を書き出しました: {out}")
     return 0
 
 
@@ -147,6 +188,14 @@ def main() -> int:
     pp.add_argument("-o", "--out")
     pp.add_argument("--title")
     pp.set_defaults(func=cmd_preview)
+
+    pt = sub.add_parser("trace", help="光子軌跡を3D可視化するHTMLを生成（小history）")
+    pt.add_argument("scene")
+    pt.add_argument("-n", type=int, default=200, help="軌跡を記録する光子数（既定200、上限2000）")
+    pt.add_argument("--seed", type=int, default=None)
+    pt.add_argument("-o", "--out")
+    pt.add_argument("--title")
+    pt.set_defaults(func=cmd_trace)
 
     pr = sub.add_parser("run", help="光子輸送を実行")
     pr.add_argument("scene")

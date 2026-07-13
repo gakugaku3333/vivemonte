@@ -4,8 +4,19 @@ from __future__ import annotations
 import numpy as np
 
 from vivemonte.geometry import Geometry
-from vivemonte.transport import (TrajectoryRecorder, transport_photons,
-                                  trajectories_to_json)
+from vivemonte.preview import write_html
+from vivemonte.scene import validate_scene
+from vivemonte.transport import (TrajectoryRecorder, sample_source_photons,
+                                  transport_photons, trajectories_to_json)
+
+_BASE_SOURCE = {
+    "kvp": 80, "position": [0, -50, 0], "direction": [0, 1, 0],
+    "field": {"size_cm": [10, 10], "sid_cm": 50}, "filtration_mm_al": 2.5,
+}
+_BASE_GEOMETRY = [{
+    "name": "slab", "shape": "box", "material": "water",
+    "center": [0, 0, 0], "size_cm": [10, 10, 10],
+}]
 
 
 def _slab_geometry():
@@ -108,3 +119,30 @@ def test_recorder_none_does_not_change_transport_result():
     assert np.allclose(pos_a, pos_b)
     assert np.allclose(dirv_a, dirv_b)
     assert rec.photon_ids
+
+
+def test_trace_html_contains_trajectories_and_checkbox(tmp_path):
+    """HTMLスモーク: trace出力にtrajectories/ckTrajが入り、previewは空配列になる。"""
+    scene = validate_scene({"source": _BASE_SOURCE, "geometry": _BASE_GEOMETRY})
+    assert scene.ok
+
+    geom = Geometry(scene.raw["geometry"])
+    rng = np.random.default_rng(5)
+    pos, dirv, energy = sample_source_photons(scene.raw["source"], 20, rng)
+    rec = TrajectoryRecorder()
+    transport_photons(pos, dirv, energy, geom, rng, recorder=rec)
+    trajectories = trajectories_to_json(rec)
+    assert trajectories
+
+    trace_out = tmp_path / "trace.html"
+    write_html(scene, str(trace_out), trajectories=trajectories)
+    trace_html = trace_out.read_text(encoding="utf-8")
+    assert '"trajectories"' in trace_html
+    assert 'ckTraj' in trace_html
+    assert '"points"' in trace_html
+
+    preview_out = tmp_path / "preview.html"
+    write_html(scene, str(preview_out))
+    preview_html = preview_out.read_text(encoding="utf-8")
+    assert '"trajectories": []' in preview_html
+    assert 'ckTraj' in preview_html  # チェックボックス自体は常に存在（空なら非表示にするだけ）

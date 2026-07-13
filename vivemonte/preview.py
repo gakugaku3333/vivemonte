@@ -70,7 +70,7 @@ def _sphere_mesh(c, r, n=24):
     return edges, []
 
 
-def scene_to_json(scene: Scene) -> dict:
+def scene_to_json(scene: Scene, trajectories: list[dict] | None = None) -> dict:
     raw = scene.raw
     objects = []
     mats_seen = {}
@@ -107,16 +107,18 @@ def scene_to_json(scene: Scene) -> dict:
     radius = max(math.dist(lo, hi) / 2, 1.0)
 
     return {"objects": objects, "beam": beam, "center": center, "radius": radius,
-            "warnings": [str(w) for w in scene.warnings]}
+            "warnings": [str(w) for w in scene.warnings], "trajectories": trajectories or []}
 
 
-def render_html(scene: Scene, title: str = "viveMonte geometry preview") -> str:
-    data = json.dumps(scene_to_json(scene), ensure_ascii=False)
+def render_html(scene: Scene, title: str = "viveMonte geometry preview",
+                 trajectories: list[dict] | None = None) -> str:
+    data = json.dumps(scene_to_json(scene, trajectories=trajectories), ensure_ascii=False)
     return _TEMPLATE.replace("__TITLE__", title).replace("__DATA__", data)
 
 
-def write_html(scene: Scene, out_path: str, title: str = "viveMonte geometry preview") -> str:
-    html = render_html(scene, title)
+def write_html(scene: Scene, out_path: str, title: str = "viveMonte geometry preview",
+                trajectories: list[dict] | None = None) -> str:
+    html = render_html(scene, title, trajectories=trajectories)
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
     return out_path
@@ -162,6 +164,7 @@ _TEMPLATE = r"""<!doctype html>
   <label><input type="checkbox" id="ckFaces" checked> 面塗り</label>
   <label><input type="checkbox" id="ckBeam" checked> ビーム</label>
   <label><input type="checkbox" id="ckLabels" checked> ラベル</label>
+  <label id="lblTraj" style="display:none"><input type="checkbox" id="ckTraj" checked> 軌跡</label>
 </header>
 <div id="wrap">
   <canvas id="cv"></canvas>
@@ -179,7 +182,8 @@ const views = { iso:[-0.7,0.42], front:[0, 0], side:[Math.PI/2, 0], top:[0, Math
 document.querySelectorAll('button[data-view]').forEach(b => b.onclick = () => {
   [yaw, pitch] = views[b.dataset.view]; panX = panY = 0; draw();
 });
-['ckFaces','ckBeam','ckLabels'].forEach(id => document.getElementById(id).onchange = draw);
+['ckFaces','ckBeam','ckLabels','ckTraj'].forEach(id => document.getElementById(id).onchange = draw);
+if (DATA.trajectories.length) document.getElementById('lblTraj').style.display = 'flex';
 
 function resize() {
   const r = cv.parentElement.getBoundingClientRect(), dpr = devicePixelRatio || 1;
@@ -272,6 +276,40 @@ function draw() {
       ctx.fillText(`焦点 ${b.kvp} kV`, ps[0]+9, ps[1]+4);
     }
   }
+  if (ckTraj.checked && DATA.trajectories.length) {
+    let eMax = 0;
+    for (const t of DATA.trajectories) for (const en of t.energies) if (en > eMax) eMax = en;
+    eMax = eMax || 1;
+    for (const t of DATA.trajectories) {
+      const pts = t.points;
+      for (let i = 0; i < t.energies.length; i++) {
+        const hue = 240 * (t.energies[i] / eMax);
+        const col = `hsl(${hue},85%,60%)`;
+        seg(pts[i], pts[i + 1], col, 1.4);
+        const p = project(pts[i + 1]);
+        if (!p) continue;
+        const ev = t.events[i];
+        if (ev === 'photoelectric') {
+          ctx.fillStyle = col; ctx.beginPath(); ctx.arc(p[0], p[1], 3, 0, 7); ctx.fill();
+        } else if (ev === 'compton') {
+          ctx.strokeStyle = col; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(p[0], p[1], 3, 0, 7); ctx.stroke();
+        } else if (ev === 'rayleigh') {
+          ctx.strokeStyle = col; ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(p[0], p[1] - 4); ctx.lineTo(p[0] + 4, p[1]);
+          ctx.lineTo(p[0], p[1] + 4); ctx.lineTo(p[0] - 4, p[1]);
+          ctx.closePath(); ctx.stroke();
+        } else if (ev === 'escape') {
+          ctx.strokeStyle = col; ctx.lineWidth = 1.3;
+          ctx.beginPath();
+          ctx.moveTo(p[0] - 3, p[1] - 3); ctx.lineTo(p[0] + 3, p[1] + 3);
+          ctx.moveTo(p[0] - 3, p[1] + 3); ctx.lineTo(p[0] + 3, p[1] - 3);
+          ctx.stroke();
+        }
+      }
+    }
+  }
   if (showLabels) {
     ctx.font = '12px sans-serif';
     for (const o of DATA.objects) {
@@ -290,6 +328,11 @@ function draw() {
     Object.entries(mats).map(([m, c]) =>
       `<span class="sw" style="background:${c}"></span>${m}`).join('<br>') +
     `<br><span class="sw" style="background:#fbbf24"></span>X線ビーム（照射野 ${DATA.beam.field_size[0]}×${DATA.beam.field_size[1]} cm @ SID ${DATA.beam.sid} cm）`;
+  if (DATA.trajectories.length) {
+    lg.innerHTML += '<br><br><b style="font-size:12px">軌跡（' + DATA.trajectories.length + '光子）</b><br>' +
+      '● 光電吸収　○ コンプトン　◇ レイリー　× 脱出<br>' +
+      '色: 青=高エネルギー → 赤=低エネルギー';
+  }
   if (DATA.warnings.length) {
     const wd = document.getElementById('warn');
     wd.style.display = 'block';
