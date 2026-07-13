@@ -101,6 +101,13 @@ def validate_scene(raw: dict) -> Scene:
             angle = 12.0
         src["anode_angle_deg"] = float(angle)
 
+        mas = src.get("mas")
+        if mas is not None:
+            if not isinstance(mas, (int, float)) or mas <= 0:
+                errors.append(SceneError("source.mas", "mas（管電流時間積）は正の数値です"))
+            else:
+                src["mas"] = float(mas)
+
     # ---- geometry ----
     geoms = raw.get("geometry")
     if not isinstance(geoms, list) or not geoms:

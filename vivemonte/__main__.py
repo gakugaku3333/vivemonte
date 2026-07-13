@@ -62,14 +62,19 @@ def cmd_run(args) -> int:
     for name, e_mev in sorted(result.energy_deposited_MeV.items(), key=lambda kv: -kv[1]):
         print(f"  {name}: {e_mev:.6g}")
 
+    if result.n_photons_real is not None:
+        print(f"光子数校正: mAs={scene.raw['source']['mas']:g} で照射野を通過する実光子数 "
+              f"= {result.n_photons_real:.6g}")
+
     if args.dose_grid:
         import numpy as np
         geometry = Geometry(scene.raw["geometry"])
         dose = dose_map_Gy(result.grid, geometry)
         h10 = result.grid.h10_map_pSv()
         n_histories = result.n_histories
-        # 1 historyあたりの値に規格化 — 実際の管電流時間積(mAs)への
-        # 換算は別途、線源のフォトン数校正（未実装、次段）が必要
+        # scene.source.mas未指定時は1historyあたりの値のみ（相対値）を出力する。
+        # mas指定時は実光子数でスケールした絶対値[Gy]・[pSv]も出す。
+        scale = (result.n_photons_real / n_histories) if result.n_photons_real is not None else None
         dose_per_history = dose / n_histories
         h10_per_history = h10 / n_histories
         print(f"線量グリッド: shape={result.grid.shape}, "
@@ -78,15 +83,23 @@ def cmd_run(args) -> int:
         print(f"  総カーマ: {result.grid.total_kerma_MeV():.6g} MeV "
               f"({result.grid.total_kerma_MeV() / n_histories * 1000:.6g} keV/history)")
         print(f"  最大H*(10) [pSv/history]: {h10_per_history.max():.6g}")
+        if scale is not None:
+            print(f"  最大吸収線量 [Gy]（mAs校正済み）: {(dose_per_history.max() * scale):.6g}")
+            print(f"  最大H*(10) [pSv]（mAs校正済み）: {(h10_per_history.max() * scale):.6g}")
         if args.dose_out:
-            np.savez(args.dose_out,
-                     dose_per_history_Gy=dose_per_history,
-                     h10_per_history_pSv=h10_per_history,
-                     kerma_keV=result.grid.kerma_keV,
-                     h10_track_pSv_cm3=result.grid.h10_track_pSv_cm3,
-                     origin_cm=result.grid.origin_cm,
-                     voxel_size_cm=result.grid.voxel_size_cm,
-                     shape=np.array(result.grid.shape))
+            save_kwargs = dict(
+                dose_per_history_Gy=dose_per_history,
+                h10_per_history_pSv=h10_per_history,
+                kerma_keV=result.grid.kerma_keV,
+                h10_track_pSv_cm3=result.grid.h10_track_pSv_cm3,
+                origin_cm=result.grid.origin_cm,
+                voxel_size_cm=result.grid.voxel_size_cm,
+                shape=np.array(result.grid.shape),
+            )
+            if scale is not None:
+                save_kwargs["dose_Gy"] = dose_per_history * scale
+                save_kwargs["h10_pSv"] = h10_per_history * scale
+            np.savez(args.dose_out, **save_kwargs)
             print(f"線量グリッドを書き出しました: {args.dose_out}")
     return 0
 

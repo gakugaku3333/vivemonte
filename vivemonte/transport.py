@@ -336,6 +336,29 @@ class TransportResult:
     fraction_escaped: float
     mean_scatter_events: float
     grid: VoxelGrid | None = None
+    n_photons_real: float | None = None  # scene.source.mas指定時: 実際に照射野を通過する光子数
+
+
+def photon_count_through_field(src: dict) -> float:
+    """指定されたmAsで実際に照射野を通過する光子数（フルエンス×照射野面積）。
+
+    SpekPyの絶対フルエンス計算（get_flu、focus-to-detector距離z=SIDでの
+    photons/cm²）を使う。フィールド内のフルエンス分布は中心軸上の値で
+    一様と近似する（斜入射による濾過路長の増加等は無視、教育・研究用の
+    一次近似）。SpekPy未インストール環境では校正できない
+    （Kramers近似フォールバックは絶対規格化を持たないため）。
+    """
+    if not _HAS_SPEKPY:
+        raise RuntimeError("光子数校正にはspekpyが必要です（`.venv/bin/pip install spekpy`）")
+    mas = src.get("mas")
+    if mas is None:
+        raise ValueError("source.mas が指定されていません（光子数校正には管電流時間積[mAs]が必要）")
+    w, h = src["field"]["size_cm"]
+    sid = src["field"]["sid_cm"]
+    s = _spekpy.Spek(kvp=src["kvp"], th=src.get("anode_angle_deg", 12.0), z=sid, mas=mas)
+    s.filter("Al", src.get("filtration_mm_al", 2.5))
+    fluence_per_cm2 = s.get_flu()
+    return fluence_per_cm2 * w * h
 
 
 def dose_map_Gy(grid: VoxelGrid, geometry: Geometry) -> np.ndarray:
@@ -375,6 +398,8 @@ def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
         n_escaped += int(np.sum(result.escaped))
         scatter_sum += int(np.sum(result.n_scatter))
 
+    n_photons_real = photon_count_through_field(src) if src.get("mas") is not None else None
+
     return TransportResult(
         n_histories=n_histories,
         energy_deposited_MeV={k: v / 1000.0 for k, v in energy_deposited.items()},
@@ -382,4 +407,5 @@ def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
         fraction_escaped=n_escaped / n_histories,
         mean_scatter_events=scatter_sum / n_histories,
         grid=grid,
+        n_photons_real=n_photons_real,
     )

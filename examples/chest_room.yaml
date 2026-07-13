@@ -6,6 +6,7 @@ source:
   type: xray_tube
   kvp: 120
   filtration_mm_al: 2.5
+  mas: 4.0                     # 管電流時間積（胸部立位撮影の代表値、光子数校正に使用）
   position: [0, -180, 140]     # 焦点: 患者前方180cm、床上140cm（胸部高さ）
   direction: [0, 1, 0]         # +y方向（患者→検出器へ水平照射）
   field:
