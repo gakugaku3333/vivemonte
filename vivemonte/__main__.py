@@ -41,7 +41,8 @@ def cmd_preview(args) -> int:
 
 def cmd_run(args) -> int:
     from .scene import load_scene
-    from .transport import run_transport
+    from .transport import dose_map_Gy, run_transport
+    from .geometry import Geometry
 
     scene = load_scene(args.scene)
     if not scene.ok:
@@ -51,7 +52,8 @@ def cmd_run(args) -> int:
     for w in scene.warnings:
         print(f"[警告] {w}")
 
-    result = run_transport(scene, n_histories=int(args.n_histories), seed=args.seed)
+    result = run_transport(scene, n_histories=int(args.n_histories), seed=args.seed,
+                            dose_grid=args.dose_grid, grid_resolution_cm=args.resolution)
     print(f"histories: {result.n_histories:,}")
     print(f"吸収（光電）割合: {result.fraction_absorbed:.4f}")
     print(f"脱出割合: {result.fraction_escaped:.4f}")
@@ -59,6 +61,28 @@ def cmd_run(args) -> int:
     print("材料別吸収エネルギー [MeV/history合計]:")
     for name, e_mev in sorted(result.energy_deposited_MeV.items(), key=lambda kv: -kv[1]):
         print(f"  {name}: {e_mev:.6g}")
+
+    if args.dose_grid:
+        import numpy as np
+        geometry = Geometry(scene.raw["geometry"])
+        dose = dose_map_Gy(result.grid, geometry)
+        n_histories = result.n_histories
+        # 1 historyあたりの線量に規格化 [Gy/history] — 実際の管電流時間積(mAs)への
+        # 換算は別途、線源のフォトン数校正（未実装、次段）が必要
+        dose_per_history = dose / n_histories
+        print(f"線量グリッド: shape={result.grid.shape}, "
+              f"resolution={result.grid.voxel_size_cm}cm")
+        print(f"  最大線量 [Gy/history]: {dose_per_history.max():.6g}")
+        print(f"  総カーマ: {result.grid.total_kerma_MeV():.6g} MeV "
+              f"({result.grid.total_kerma_MeV() / n_histories * 1000:.6g} keV/history)")
+        if args.dose_out:
+            np.savez(args.dose_out,
+                     dose_per_history_Gy=dose_per_history,
+                     kerma_keV=result.grid.kerma_keV,
+                     origin_cm=result.grid.origin_cm,
+                     voxel_size_cm=result.grid.voxel_size_cm,
+                     shape=np.array(result.grid.shape))
+            print(f"線量グリッドを書き出しました: {args.dose_out}")
     return 0
 
 
@@ -108,6 +132,9 @@ def main() -> int:
     pr.add_argument("scene")
     pr.add_argument("-n", "--n-histories", type=float, default=1e5)
     pr.add_argument("--seed", type=int, default=None)
+    pr.add_argument("--dose-grid", action="store_true", help="ボクセル吸収線量タリーを有効化")
+    pr.add_argument("--resolution", type=float, default=5.0, help="線量グリッド解像度[cm]（既定5cm）")
+    pr.add_argument("--dose-out", help="線量グリッドを.npzに書き出すパス")
     pr.set_defaults(func=cmd_run)
 
     px = sub.add_parser("xs", help="断面積カーブを描画")

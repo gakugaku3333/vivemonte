@@ -23,7 +23,8 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from .geometry import Geometry
-from .materials import linear_mu, mu_rho_parts
+from .materials import density, linear_mu, mu_en_rho, mu_rho_parts
+from .tally import VoxelGrid, accumulate_track_length
 
 _MEC2_KEV = 511.0
 
@@ -78,6 +79,15 @@ def _linear_mu_batch(materials: np.ndarray, energies: np.ndarray) -> np.ndarray:
         m = materials == name
         mu[m] = linear_mu(name, energies[m])
     return mu
+
+
+def _mu_en_linear_batch(materials: np.ndarray, energies: np.ndarray) -> np.ndarray:
+    """μen = (μen/ρ)·ρ [1/cm] — カーマtrack-length estimator用の線減弱係数。"""
+    mu_en = np.zeros(len(materials))
+    for name in set(materials.tolist()):
+        m = materials == name
+        mu_en[m] = mu_en_rho(name, energies[m]) * density(name)
+    return mu_en
 
 
 def _sample_klein_nishina(e_keV: np.ndarray, rng: np.random.Generator):
@@ -154,10 +164,13 @@ class BatchResult:
 
 
 def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
-                       geometry: Geometry, rng: np.random.Generator) -> BatchResult:
+                       geometry: Geometry, rng: np.random.Generator,
+                       grid: VoxelGrid | None = None) -> BatchResult:
     """光源サンプリングとは独立な輸送カーネル本体（テストで直接叩ける）。
 
     pos/dirv/energy は呼び出し側の配列を破壊的に更新する。
+    grid を渡すと、各飛行区間ごとにカーマのtrack-length estimatorを
+    ボクセルグリッドへ積算する（vivemonte/tally.py参照）。
     """
     n = pos.shape[0]
     alive = np.ones(n, dtype=bool)
@@ -178,6 +191,11 @@ def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
         will_interact = tau[idx] < tau_to_boundary
 
         ds = np.where(will_interact, tau[idx] / mu_safe, t_boundary)
+
+        if grid is not None:
+            mu_en_linear = _mu_en_linear_batch(mat, e)
+            accumulate_track_length(grid, o, d, ds, e * mu_en_linear)
+
         pos[idx] = o + d * ds[:, None]
 
         noninteract = ~will_interact
@@ -244,13 +262,29 @@ class TransportResult:
     fraction_absorbed: float
     fraction_escaped: float
     mean_scatter_events: float
+    grid: VoxelGrid | None = None
+
+
+def dose_map_Gy(grid: VoxelGrid, geometry: Geometry) -> np.ndarray:
+    """ボクセル中心の材料を判定し、その密度でカーマ→吸収線量[Gy]に換算する。
+
+    グリッドはタリー専用であり材料を保持しないため、密度は出力時に
+    ジオメトリーへ問い合わせて求める（ボクセル解像度が粗い場合、
+    境界付近のボクセルは中心点1点で代表材料を決める近似になる）。
+    """
+    centers = grid.voxel_centers()
+    mat = geometry.material_at(centers)
+    density_flat = np.array([density(m) for m in mat])
+    return grid.dose_map_Gy(density_flat.reshape(grid.shape))
 
 
 def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
-                   batch_size: int = 200_000) -> TransportResult:
+                   batch_size: int = 200_000, dose_grid: bool = False,
+                   grid_resolution_cm: float = 5.0) -> TransportResult:
     rng = np.random.default_rng(seed)
     src = scene.raw["source"]
     geometry = Geometry(scene.raw["geometry"])
+    grid = VoxelGrid.from_bbox(geometry.bbox_min, geometry.bbox_max, grid_resolution_cm) if dose_grid else None
 
     energy_deposited: dict = {}
     n_absorbed = 0
@@ -261,7 +295,7 @@ def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
         n = min(batch_size, remaining)
         remaining -= n
         pos, dirv, energy = sample_source_photons(src, n, rng)
-        result = transport_photons(pos, dirv, energy, geometry, rng)
+        result = transport_photons(pos, dirv, energy, geometry, rng, grid=grid)
         for name, e_keV in result.energy_deposited.items():
             energy_deposited[name] = energy_deposited.get(name, 0.0) + e_keV
         n_absorbed += int(np.sum(result.absorbed))
@@ -274,4 +308,5 @@ def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
         fraction_absorbed=n_absorbed / n_histories,
         fraction_escaped=n_escaped / n_histories,
         mean_scatter_events=scatter_sum / n_histories,
+        grid=grid,
     )
