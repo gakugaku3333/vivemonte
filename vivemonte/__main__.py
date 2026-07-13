@@ -83,7 +83,8 @@ def cmd_trace(args) -> int:
 
 def cmd_run(args) -> int:
     from .scene import load_scene
-    from .transport import dose_map_Gy, run_transport
+    from .transport import (background_medium_warning, dose_map_Gy,
+                             max_voxel_position_cm, near_source_air_warning, run_transport)
     from .geometry import Geometry
 
     scene = load_scene(args.scene)
@@ -130,6 +131,23 @@ def cmd_run(args) -> int:
         if scale is not None:
             print(f"  最大吸収線量 [Gy]（mAs校正済み）: {(dose_per_history.max() * scale):.6g}")
             print(f"  最大H*(10) [pSv]（mAs校正済み）: {(h10_per_history.max() * scale):.6g}")
+
+        # 「最大」統計が非物理的な位置（背景=空気ボクセル）に落ちていないかを診断する。
+        # 詳細はdocs/lessons_learned.md参照。
+        src_pos = scene.raw["source"]["position"]
+        dose_pos = max_voxel_position_cm(result.grid, dose_per_history)
+        dose_mat = str(geometry.material_at(dose_pos[None, :])[0])
+        dose_warn = background_medium_warning(dose_mat, geometry.background)
+        if dose_warn:
+            print(f"[警告] {dose_warn}")
+
+        h10_pos = max_voxel_position_cm(result.grid, h10_per_history)
+        h10_mat = str(geometry.material_at(h10_pos[None, :])[0])
+        h10_dist = float(np.linalg.norm(h10_pos - np.asarray(src_pos, dtype=float)))
+        nearest_obj = geometry.nearest_object_distance_cm(src_pos)
+        h10_warn = near_source_air_warning(h10_mat, geometry.background, h10_dist, nearest_obj)
+        if h10_warn:
+            print(f"[警告] {h10_warn}")
         if args.dose_out:
             save_kwargs = dict(
                 dose_per_history_Gy=dose_per_history,

@@ -185,6 +185,23 @@ class Geometry:
                                         g["height_cm"], g.get("axis", "z"))
         raise ValueError(f"未知のshape: {shape}")
 
+    def nearest_object_distance_cm(self, point) -> float | None:
+        """pointから、宣言済み各物体の境界ボックスまでの最短距離[cm]。物体が無ければNone。
+
+        線源近傍のタリー値（点線源モデルの1/r²発散）が物理的に意味を持つ範囲かどうかの
+        判定に使う: 線源からこの距離より近い領域には、シーン内のどの物体も存在しない
+        （＝人や検出器が実在し得ない非物理的な近傍である）。
+        """
+        if not self.geoms:
+            return None
+        pos = np.asarray(point, dtype=float)
+        dists = []
+        for g in self.geoms:
+            lo, hi = self._shape_bbox(g)
+            closest = np.clip(pos, lo, hi)
+            dists.append(float(np.linalg.norm(pos - closest)))
+        return min(dists)
+
     def material_at(self, points: np.ndarray) -> np.ndarray:
         """点(N,3) -> 材料名の配列(N,)。リスト後方が優先、既定は background。"""
         mat = np.full(points.shape[0], self.background, dtype=object)
