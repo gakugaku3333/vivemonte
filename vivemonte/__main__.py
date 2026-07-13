@@ -3,6 +3,7 @@
   python -m vivemonte validate <scene.yaml>
   python -m vivemonte preview  <scene.yaml> [-o out.html]
   python -m vivemonte trace    <scene.yaml> [-n 200] [--seed 42] [-o out.html]
+  python -m vivemonte plot     <dose.npz> [--scene scene.yaml] [--quantity dose|h10] [-o out.png]
   python -m vivemonte xs <材料...> [--emin 10] [--emax 150] [-o out.png]
 """
 from __future__ import annotations
@@ -147,6 +148,19 @@ def cmd_run(args) -> int:
     return 0
 
 
+def cmd_plot(args) -> int:
+    from .plotting import plot_dose_npz
+
+    out = args.out or args.npz.rsplit(".", 1)[0] + "_maps.png"
+    ok = plot_dose_npz(args.npz, out, quantity=args.quantity, axis=args.axis,
+                        pos_cm=args.pos, scene_path=args.scene)
+    if not ok:
+        print("[エラー] 線量グリッドが全てゼロのため描画できません", file=sys.stderr)
+        return 1
+    print(f"線量マップを書き出しました: {out}")
+    return 0
+
+
 def cmd_xs(args) -> int:
     import matplotlib
     matplotlib.use("Agg")
@@ -205,6 +219,16 @@ def main() -> int:
     pr.add_argument("--resolution", type=float, default=5.0, help="線量グリッド解像度[cm]（既定5cm）")
     pr.add_argument("--dose-out", help="線量グリッドを.npzに書き出すパス")
     pr.set_defaults(func=cmd_run)
+
+    ppl = sub.add_parser("plot", help="線量/H*(10)マップの断面図を生成")
+    ppl.add_argument("npz")
+    ppl.add_argument("-o", "--out")
+    ppl.add_argument("--scene", help="指定するとジオメトリー輪郭を断面に重ねる")
+    ppl.add_argument("--quantity", choices=["dose", "h10"], default="dose")
+    ppl.add_argument("--axis", choices=["x", "y", "z"], default=None,
+                      help="未指定なら最大値ボクセルを通る3断面（既定）")
+    ppl.add_argument("--pos", type=float, default=None, help="--axis指定時の断面位置[cm]")
+    ppl.set_defaults(func=cmd_plot)
 
     px = sub.add_parser("xs", help="断面積カーブを描画")
     px.add_argument("materials", nargs="+")
