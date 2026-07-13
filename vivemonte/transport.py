@@ -9,8 +9,10 @@ Woodcock delta-trackingの仮想衝突は不要（空気の広い空間で無駄
 - 光電: 光子消滅、エネルギー全量をその場で局所吸収（電子飛程を無視する
   カーマ近似。README/[[lessons_learned]]参照）
 - コンプトン: Klein-Nishina微分断面積からKahn型棄却法でε=E'/Eと散乱角を抽出
-- レイリー: 弾性散乱、エネルギー変化なし。角度分布は簡易的に
-  Thomson型 (1+cos²θ)/2 で近似（原子形状因子は未実装、既知の粗さ）
+- レイリー: 弾性散乱、エネルギー変化なし。角度分布は原子形状因子F(Z,q)込みの
+  微分断面積 dσ/dΩ ∝ (1+cos²θ)·F(Z,q)² から棄却法で抽出する（xraylib.FF_Rayl,
+  EPDLベース）。化合物・混合物では質量分率×元素別レイリー断面積で
+  構成元素をまず抽選してからその元素のF(Z,q)を使う
 
 スペクトルはSpekPyで生成する（タングステン陽極、カサレイ物理モデルの
 SpekPy既定値。陽極角は scene.source.anode_angle_deg、既定12度）。
@@ -28,10 +30,12 @@ import numpy as np
 
 from .dose_coefficients import h_star_10_per_fluence
 from .geometry import Geometry
-from .materials import density, linear_mu, mu_en_rho, mu_rho_parts
+from .materials import (density, linear_mu, mu_en_rho, mu_rho_parts,
+                         rayleigh_element_weights, rayleigh_form_factor_table)
 from .tally import VoxelGrid, accumulate_track_length
 
 _MEC2_KEV = 511.0
+_HC_KEV_ANGSTROM = 12.3984193  # xraylib.MomentTransfと同じ定数（hc）
 
 try:
     import spekpy as _spekpy
@@ -149,14 +153,51 @@ def _sample_klein_nishina(e_keV: np.ndarray, rng: np.random.Generator):
     return eps, cos_theta
 
 
-def _sample_rayleigh_cos_theta(n: int, rng: np.random.Generator) -> np.ndarray:
-    """Thomson型 (1+cos²θ)/2 を棄却法で抽出（原子形状因子は未考慮の簡易近似）。"""
+def _sample_rayleigh_element(materials: np.ndarray, energies: np.ndarray,
+                              rng: np.random.Generator) -> np.ndarray:
+    """化合物・混合物の中で、レイリー相互作用がどの構成元素で起きたかを抽選する。
+
+    質量分率×元素別レイリー断面積で規格化した重みに従う（materials.py参照）。
+    """
+    z_chosen = np.empty(len(materials), dtype=int)
+    for name in set(materials.tolist()):
+        m = materials == name
+        zs, w = rayleigh_element_weights(name, energies[m])  # w: (n_elem, sum(m))
+        cumw = np.cumsum(w, axis=0)
+        r = rng.random(int(np.sum(m)))
+        idx = np.clip(np.sum(r[None, :] > cumw, axis=0), 0, len(zs) - 1)
+        z_chosen[m] = zs[idx]
+    return z_chosen
+
+
+def _sample_rayleigh_cos_theta(z_array: np.ndarray, e_array: np.ndarray,
+                                rng: np.random.Generator) -> np.ndarray:
+    """原子形状因子込みの微分断面積 (1+cos²θ)·F(Z,q)² を棄却法で抽出。
+
+    q = E·sin(θ/2)/hc [Å⁻¹]（xraylib.MomentTransfと同じ定義）。F(Z,q)はq=0で
+    Zを取り単調減少するため、g(cosθ)=(1+cos²θ)F(Z,q)²の最大値は前方散乱
+    (θ=0, q=0)での 2Z² となり、これを棄却法の包絡線に使う。
+    """
+    n = len(z_array)
     cos_theta = np.empty(n)
     pending = np.arange(n)
     while len(pending) > 0:
+        zp = z_array[pending]
+        ep = e_array[pending]
         c = rng.uniform(-1.0, 1.0, len(pending))
-        xi = rng.random(len(pending))
-        accept = xi <= (1.0 + c ** 2) / 2.0
+        theta = np.arccos(c)
+        q = ep * np.sin(theta / 2.0) / _HC_KEV_ANGSTROM
+
+        f = np.empty(len(pending))
+        for z in set(zp.tolist()):
+            m = zp == z
+            q_grid, f_grid = rayleigh_form_factor_table(int(z))
+            f[m] = np.interp(q[m], q_grid, f_grid)
+
+        g = (1.0 + c ** 2) * f ** 2
+        envelope = 2.0 * zp.astype(float) ** 2
+        xi2 = rng.random(len(pending))
+        accept = xi2 * envelope <= g
         acc = pending[accept]
         cos_theta[acc] = c[accept]
         pending = pending[~accept]
@@ -277,7 +318,8 @@ def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
 
             rayl_idx = iidx[is_rayl]
             if len(rayl_idx) > 0:
-                cos_theta = _sample_rayleigh_cos_theta(len(rayl_idx), rng)
+                z_r = _sample_rayleigh_element(mat_i[is_rayl], e_i[is_rayl], rng)
+                cos_theta = _sample_rayleigh_cos_theta(z_r, e_i[is_rayl], rng)
                 dirv[rayl_idx] = _scatter_direction(dirv[rayl_idx], cos_theta, rng)
                 tau[rayl_idx] = -np.log(rng.random(len(rayl_idx)))
                 n_scatter[rayl_idx] += 1

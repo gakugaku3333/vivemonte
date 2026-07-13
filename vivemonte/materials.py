@@ -121,6 +121,50 @@ def mu_rho_parts(material: str, energies_keV) -> dict[str, np.ndarray]:
     }
 
 
+@functools.lru_cache(maxsize=None)
+def element_composition(material: str) -> tuple[tuple[int, float], ...]:
+    """材料 -> ((原子番号Z, 質量分率), ...)。単元素材料は1要素のタプル。
+
+    レイリー散乱の角度分布は元素ごとの原子形状因子で決まるため、化合物・
+    混合物ではどの構成元素で相互作用が起きたかを抽選する必要がある
+    （transport.pyのレイリー散乱サンプリングで使用）。
+    """
+    name, _, is_elem = resolve(material)
+    if is_elem:
+        return ((xraylib.SymbolToAtomicNumber(name), 1.0),)
+    data = xraylib.GetCompoundDataNISTByName(name)
+    return tuple(zip(data["Elements"], data["massFractions"]))
+
+
+def rayleigh_element_weights(material: str, energies_keV) -> tuple[np.ndarray, np.ndarray]:
+    """材料内でレイリー相互作用がどの構成元素で起きたかの重み。
+
+    戻り値: (Z配列(n_elem,), 重み行列(n_elem, n_energies))。各列(energies_keVの
+    1点ごと)の和が1になるよう、質量分率×元素別レイリー断面積で規格化する。
+    """
+    comp = element_composition(material)
+    zs = np.array([z for z, _ in comp])
+    fracs = np.array([f for _, f in comp])
+    e = np.atleast_1d(np.asarray(energies_keV, dtype=float))
+    cs = np.array([[xraylib.CS_Rayl(int(z), ek) for ek in e] for z in zs])
+    weighted = fracs[:, None] * cs
+    total = weighted.sum(axis=0, keepdims=True)
+    total = np.where(total > 0, total, 1.0)
+    return zs, weighted / total
+
+
+@functools.lru_cache(maxsize=None)
+def rayleigh_form_factor_table(z: int, q_max: float = 20.0, n: int = 2000) -> tuple[np.ndarray, np.ndarray]:
+    """レイリー散乱の原子形状因子 F(Z,q) を q∈[0, q_max] Å⁻¹ でテーブル化（xraylib, EPDLベース）。
+
+    q_max=20 Å⁻¹ は診断領域（kvp<=200keV、後方散乱θ=π）でも十分な余裕を持つ
+    （E=200keV, θ=180°でも q≈16.1 Å⁻¹）。角度サンプリング側でnp.interpして使う。
+    """
+    q_grid = np.linspace(0.0, q_max, n)
+    f_grid = np.array([xraylib.FF_Rayl(z, q) for q in q_grid])
+    return q_grid, f_grid
+
+
 def density(material: str) -> float:
     return resolve(material)[1]
 
