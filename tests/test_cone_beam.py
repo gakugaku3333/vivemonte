@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from vivemonte.scene import field_corners, validate_scene
-from vivemonte.transport import cone_half_angle_rad, sample_source_photons
+from vivemonte.source import cone_half_angle_rad, sample_source_photons
 
 _CONE_SRC = {
     "kvp": 100.0,
@@ -97,7 +97,7 @@ def test_scene_validation_accepts_cone():
 def test_photon_count_equal_area_cone_matches_rect():
     """mAs校正の照射野面積: 同面積のcone/rectで実光子数が一致する。"""
     pytest.importorskip("spekpy")
-    from vivemonte.transport import photon_count_through_field
+    from vivemonte.source import photon_count_through_field
 
     base = {"kvp": 100.0, "filtration_mm_al": 2.5, "mas": 10.0}
     # 面積を一致させる: π·r² = w·h → r=10cm, w=h=√(100π)

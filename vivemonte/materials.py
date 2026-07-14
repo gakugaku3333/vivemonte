@@ -127,7 +127,7 @@ def element_composition(material: str) -> tuple[tuple[int, float], ...]:
 
     レイリー散乱の角度分布は元素ごとの原子形状因子で決まるため、化合物・
     混合物ではどの構成元素で相互作用が起きたかを抽選する必要がある
-    （transport.pyのレイリー散乱サンプリングで使用）。
+    （physics.pyのレイリー散乱サンプリングで使用）。
     """
     name, _, is_elem = resolve(material)
     if is_elem:
@@ -167,6 +167,19 @@ def rayleigh_form_factor_table(z: int, q_max: float = 20.0, n: int = 2000) -> tu
 
 def density(material: str) -> float:
     return resolve(material)[1]
+
+
+def material_groups(names: np.ndarray):
+    """材料名配列を (材料名, ブールマスク) の組に分けて材料名順に返す。
+
+    輸送・タリーでは光子バッチを材料ごとにまとめて断面積を引く処理が
+    頻出するため、そのグループ化を一箇所に集約する。ソートは必須:
+    set()の反復順は文字列ハッシュのランダム化でプロセスごとに変わるため、
+    グループ順に依存して乱数を消費する処理（レイリー元素抽選など）が
+    未ソートだと同一seedでも実行ごとに結果が変わってしまう。
+    """
+    for name in sorted(set(names.tolist())):
+        yield name, names == name
 
 
 def linear_mu(material: str, energies_keV) -> np.ndarray:

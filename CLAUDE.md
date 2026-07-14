@@ -71,6 +71,13 @@ virtual-collision rejection is needed. This scales well for room-size scenes wit
 voxel-resolution/memory tradeoff. Overlapping objects resolve by list order (later wins); open space not inside
 any object is `background` (default air).
 
+**Module layout around the kernel**: [transport.py](vivemonte/transport.py) is only the transport loop +
+`run_transport`. Spectrum generation (SpekPy/Kramers, heel off-axis spectra) lives in
+[spectrum.py](vivemonte/spectrum.py); source/field sampling and the mAs photon-count calibration in
+[source.py](vivemonte/source.py); interaction angle/energy sampling in [physics.py](vivemonte/physics.py);
+trajectory recording for `trace` in [trajectory.py](vivemonte/trajectory.py); dose-map conversion and the
+non-physical-max warnings in [diagnostics.py](vivemonte/diagnostics.py).
+
 **Physics**: photoelectric / Compton (Klein-Nishina with Kahn rejection sampling) / Rayleigh (atomic form factor
 F(Z,q) via `xraylib.FF_Rayl`, compounds sampled by mass-fraction-weighted element pick before the angular
 distribution). Electron range is neglected (kerma approximation — local absorption at the interaction point).
@@ -85,7 +92,7 @@ grid). H*(10) is a fluence-based protection quantity (different from kerma), com
 track-length integral by voxel volume (`VoxelGrid.h10_map_pSv`).
 
 **Units and calibration**: relative output is `Gy/history` / `pSv/history`. When `scene.yaml`'s `source.mas` is
-set, `photon_count_through_field` (in transport.py) uses SpekPy's absolute fluence to get the real photon count
+set, `photon_count_through_field` (in source.py) uses SpekPy's absolute fluence to get the real photon count
 through the field, and per-history values are scaled by that count (not divided again by `n_histories` — see the
 mAs double-division bug writeup in [docs/lessons_learned.md](docs/lessons_learned.md) if touching this path).
 
@@ -106,7 +113,7 @@ covered by a regression test in `tests/test_materials.py`. Re-fetch data with `s
 background (air) voxel near the 1/r² point-source singularity, or an air voxel just outside a material boundary
 due to backscatter (this gets worse, not better, with finer grid resolution — it's a boundary effect, not
 discretization error). The CLI detects and prints a `[警告]` when this happens
-(`background_medium_warning`/`near_source_air_warning` in transport.py). For a real exposure-point estimate (patient
+(`background_medium_warning`/`near_source_air_warning` in diagnostics.py). For a real exposure-point estimate (patient
 surface, operator position, etc.), lay a fine grid directly at that position rather than trusting the global max.
 Full writeup: [docs/lessons_learned.md](docs/lessons_learned.md).
 

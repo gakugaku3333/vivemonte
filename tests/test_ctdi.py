@@ -68,7 +68,7 @@ def test_ctdi_order_of_magnitude_against_spekpy_mas_path():
     0.5〜50 mGyの帯を外れたら桁バグを疑う。
     """
     pytest.importorskip("spekpy")
-    from vivemonte.transport import photon_count_through_field
+    from vivemonte.source import photon_count_through_field
 
     ctdiw_per_history, _, _ = _ctdi("body")
     n_photons = photon_count_through_field({**_SRC, "mas": 300.0})

@@ -59,7 +59,9 @@ def ctdi_per_history_Gy(src: dict, phantom: str = "body",
     独立にシミュレートする（シーン内の寝台・壁等の散乱は実測CTDIにも
     含まれないので、含めないのが正しい）。
     """
-    from .transport import dose_map_Gy, sample_source_photons, transport_photons
+    from .diagnostics import dose_map_Gy
+    from .source import sample_source_photons
+    from .transport import transport_photons
 
     rot = src.get("rotation")
     if rot is None:

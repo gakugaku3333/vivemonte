@@ -6,8 +6,9 @@ import numpy as np
 from vivemonte.geometry import Geometry
 from vivemonte.preview import write_html
 from vivemonte.scene import validate_scene
-from vivemonte.transport import (TrajectoryRecorder, sample_source_photons,
-                                  transport_photons, trajectories_to_json)
+from vivemonte.source import sample_source_photons
+from vivemonte.trajectory import TrajectoryRecorder, trajectories_to_json
+from vivemonte.transport import transport_photons
 
 _BASE_SOURCE = {
     "kvp": 80, "position": [0, -50, 0], "direction": [0, 1, 0],

@@ -15,9 +15,9 @@ import numpy as np
 from vivemonte.geometry import Geometry
 from vivemonte.scene import validate_scene
 from vivemonte.tally import VoxelGrid
-from vivemonte.transport import (background_medium_warning, dose_map_Gy,
-                                  max_voxel_position_cm, near_source_air_warning,
-                                  run_transport)
+from vivemonte.diagnostics import (background_medium_warning, dose_map_Gy,
+                                    max_voxel_position_cm, near_source_air_warning)
+from vivemonte.transport import run_transport
 
 _BASE_SOURCE = {
     "kvp": 120, "position": [0, -180, 140], "direction": [0, 1, 0],
@@ -132,7 +132,8 @@ def test_dose_max_voxel_inside_all_water_grid_does_not_trigger_warning():
     敷くことで「境界効果を含まない領域の最大値」では警告が出ないことを確認する。
     """
     from vivemonte.tally import VoxelGrid
-    from vivemonte.transport import sample_source_photons, transport_photons
+    from vivemonte.source import sample_source_photons
+    from vivemonte.transport import transport_photons
 
     src = {**_BASE_SOURCE, "position": [0, -20, 140], "field": {"size_cm": [2, 2], "sid_cm": 20}}
     scene = validate_scene({"source": src, "geometry": _SLAB_GEOMETRY})

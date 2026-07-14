@@ -50,8 +50,9 @@ def cmd_trace(args) -> int:
     from .geometry import Geometry
     from .preview import write_html
     from .scene import load_scene
-    from .transport import (TrajectoryRecorder, sample_source_photons,
-                             transport_photons, trajectories_to_json)
+    from .source import sample_source_photons
+    from .trajectory import TrajectoryRecorder, trajectories_to_json
+    from .transport import transport_photons
 
     scene = load_scene(args.scene)
     if not scene.ok:
@@ -82,10 +83,11 @@ def cmd_trace(args) -> int:
 
 
 def cmd_run(args) -> int:
-    from .scene import load_scene
-    from .transport import (background_medium_warning, dose_map_Gy,
-                             max_voxel_position_cm, near_source_air_warning, run_transport)
+    from .diagnostics import (background_medium_warning, dose_map_Gy,
+                               max_voxel_position_cm, near_source_air_warning)
     from .geometry import Geometry
+    from .scene import load_scene
+    from .transport import run_transport
 
     scene = load_scene(args.scene)
     if not scene.ok:

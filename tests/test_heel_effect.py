@@ -12,7 +12,7 @@ import pytest
 pytest.importorskip("spekpy")
 
 from vivemonte.scene import validate_scene
-from vivemonte.transport import sample_source_photons
+from vivemonte.source import sample_source_photons
 
 # 陽極方向 = +x。SID100cm・照射野40cm角（ヒール軸±20cm）で効果がよく見える
 _HEEL_SRC = {
@@ -111,7 +111,7 @@ def test_scene_validation_rejects_anode_parallel_to_beam():
 def test_mas_calibration_with_heel_below_central_axis_value():
     """面平均フルエンス（ヒール込み）は中心軸一様近似より小さいはず
     （中心より陽極側の低下が大きく、陰極側の増加は小さい）。"""
-    from vivemonte.transport import photon_count_through_field
+    from vivemonte.source import photon_count_through_field
 
     n_heel = photon_count_through_field({**_HEEL_SRC, "mas": 10.0})
     n_flat = photon_count_through_field(

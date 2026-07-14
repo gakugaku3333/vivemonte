@@ -5,7 +5,8 @@ import numpy as np
 import pytest
 
 from vivemonte.scene import validate_scene
-from vivemonte.transport import photon_count_through_field, run_transport
+from vivemonte.source import photon_count_through_field
+from vivemonte.transport import run_transport
 
 _BASE_SOURCE = {
     "kvp": 120, "position": [0, -180, 140], "direction": [0, 1, 0],
@@ -90,7 +91,7 @@ def test_calibrated_dose_matches_spekpy_kerma_order_of_magnitude():
     import spekpy as sp
 
     from vivemonte.geometry import Geometry
-    from vivemonte.transport import dose_map_Gy
+    from vivemonte.diagnostics import dose_map_Gy
 
     raw = {"source": {**_BASE_SOURCE, "mas": 4.0}, "geometry": _BASE_GEOMETRY}
     scene = validate_scene(raw)

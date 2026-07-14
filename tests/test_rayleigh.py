@@ -12,7 +12,7 @@ from __future__ import annotations
 import numpy as np
 
 from vivemonte.materials import element_composition, rayleigh_element_weights, rayleigh_form_factor_table
-from vivemonte.transport import _sample_rayleigh_cos_theta, _sample_rayleigh_element
+from vivemonte.physics import sample_rayleigh_cos_theta, sample_rayleigh_element
 
 
 def test_form_factor_at_q0_equals_Z():
@@ -32,7 +32,7 @@ def test_scattering_is_forward_biased_not_symmetric():
     rng = np.random.default_rng(0)
     z = np.full(n, 82)  # 鉛
     e = np.full(n, 60.0)
-    cos_theta = _sample_rayleigh_cos_theta(z, e, rng)
+    cos_theta = sample_rayleigh_cos_theta(z, e, rng)
     assert cos_theta.mean() > 0.3  # Thomson(平均0)より明確に前方偏り
 
 
@@ -45,8 +45,8 @@ def test_lighter_element_is_more_forward_peaked():
     n = 20_000
     rng = np.random.default_rng(1)
     e = np.full(n, 60.0)
-    cos_lead = _sample_rayleigh_cos_theta(np.full(n, 82), e, rng)
-    cos_carbon = _sample_rayleigh_cos_theta(np.full(n, 6), e, rng)
+    cos_lead = sample_rayleigh_cos_theta(np.full(n, 82), e, rng)
+    cos_carbon = sample_rayleigh_cos_theta(np.full(n, 6), e, rng)
     assert cos_carbon.mean() > cos_lead.mean()
 
 
@@ -55,8 +55,8 @@ def test_higher_energy_is_more_forward_peaked():
     n = 20_000
     rng = np.random.default_rng(2)
     z = np.full(n, 20)  # カルシウム
-    cos_low = _sample_rayleigh_cos_theta(z, np.full(n, 20.0), rng)
-    cos_high = _sample_rayleigh_cos_theta(z, np.full(n, 150.0), rng)
+    cos_low = sample_rayleigh_cos_theta(z, np.full(n, 20.0), rng)
+    cos_high = sample_rayleigh_cos_theta(z, np.full(n, 150.0), rng)
     assert cos_high.mean() > cos_low.mean()
 
 
@@ -71,7 +71,7 @@ def test_element_selection_only_returns_compound_members():
     n = 5000
     materials = np.full(n, "bone", dtype=object)
     energies = np.full(n, 50.0)
-    z_chosen = _sample_rayleigh_element(materials, energies, rng)
+    z_chosen = sample_rayleigh_element(materials, energies, rng)
     valid_zs = {z for z, _ in element_composition("bone")}
     assert set(np.unique(z_chosen).tolist()).issubset(valid_zs)
 
@@ -83,7 +83,7 @@ def test_calcium_overrepresented_relative_to_mass_fraction_in_bone():
     n = 20_000
     materials = np.full(n, "bone", dtype=object)
     energies = np.full(n, 50.0)
-    z_chosen = _sample_rayleigh_element(materials, energies, rng)
+    z_chosen = sample_rayleigh_element(materials, energies, rng)
     ca_fraction = np.mean(z_chosen == 20)
     ca_mass_fraction = dict(element_composition("bone"))[20]
     assert ca_fraction > ca_mass_fraction
