@@ -1,0 +1,78 @@
+# CT撮影室のベースシーン
+# 座標系: cm、z軸が鉛直上向き、床上面が z=0
+#
+# ⚠️ 近似の注意: ガントリー回転は source.rotation で光子ごとの角度抽選
+# （連続一様）として表現する（実装: vivemonte/transport.py の
+# sample_source_photons）。rotation.scan_length_cm を指定するとヘリカル撮影の
+# 「位相平均近似」になる: 螺旋の開始位相が体に対してランダムであることを
+# 位相平均すると回転角とテーブル位置は厳密に独立になるため、角度とテーブル
+# 位置を独立に一様抽選すれば位相平均されたヘリカル軌道と統計的に等価
+# （スキャン端の半回転以内とover-rangingを除く）。電流変調（mA modulation）・
+# ボウタイフィルタ・コーンビーム効果は未対応。厳密なCTDI等の患者線量評価には
+# まだ使えない。
+#
+# カスタマイズの起点:
+#   - ctdi_vol_mGy: 装置コンソール表示のCTDIvolをそのまま入れる（推奨）。
+#     ボウタイ・mA変調・ピッチ・実機の出力較正が実測値に折り込まれるため、
+#     CTではmAs+SpekPy校正より汎用性が高い。ctdi_phantom: body（Ø32cm、既定）
+#     / head（Ø16cm）は検査プロトコルの表示基準に合わせる。
+#     mAsで校正したい場合は ctdi_vol_mGy を消して mas:（総mAs）を指定する
+#     （両方同時はエラー）
+#   - rotation.scan_length_cm: ヘリカルのスキャン範囲。isocenterを中心に
+#     回転軸方向へ±半分ずつ広がる。省略時はアキシャル1断面の回転
+#   - rotation.n_angles: 通常は省略（連続一様）。トモシンセシス等の
+#     離散投影モダリティを模擬するときだけ指定する
+#   - field.size_cm: [ファン幅, コリメーション幅]。体軸方向がy
+#   - 壁: 遮蔽評価ではback_wall以外の壁も追加すること
+
+source:
+  type: xray_tube
+  kvp: 120
+  filtration_mm_al: 2.5          # CT実機はボウタイフィルタ付きだが未対応（Al等価で近似）
+  ctdi_vol_mGy: 12.0             # コンソール表示のCTDIvol（胸腹部ヘリカルの代表値）
+  ctdi_phantom: body             # 表示基準ファントム（body=Ø32cm / head=Ø16cm）
+  position: [0, 0, 170]          # 角度0での焦点位置: アイソセンタ(z=110)の60cm上
+  direction: [0, 0, -1]          # 角度0でのビーム方向（鉛直下向き）
+  rotation:
+    isocenter: [0, 0, 110]        # 患者胸腹部中心と同じ高さ
+    axis: y                       # 体軸(y)周りに回転（x-z平面内でガントリーが回る）
+    scan_length_cm: 30            # ヘリカルスキャン範囲（体幹部30cm、y=-15〜+15）
+  field:
+    shape: rect
+    size_cm: [50, 4]             # アイソセンタ面でファン幅50cm × コリメーション4cm
+    sid_cm: 60                   # 焦点-アイソセンタ距離
+
+geometry:
+  - name: patient_torso
+    shape: cylinder
+    material: soft_tissue
+    axis: y                      # 仰臥位（体軸=y）
+    radius_cm: 15
+    height_cm: 60
+    center: [0, 0, 110]          # アイソセンタに胸腹部中心
+
+  - name: patient_head
+    shape: sphere
+    material: soft_tissue
+    radius_cm: 10
+    center: [0, 45, 110]
+
+  - name: couch
+    shape: box
+    material: pmma               # カーボン天板の代用
+    size_cm: [50, 200, 3]
+    center: [0, 20, 93.5]        # 天板上面 z=95
+
+  - name: floor
+    shape: box
+    material: concrete
+    size_cm: [500, 500, 15]
+    center: [0, 0, -7.5]
+
+  - name: back_wall
+    shape: box
+    material: concrete
+    size_cm: [500, 15, 280]
+    center: [0, 257.5, 140]      # 患者足側後方の壁（遮蔽評価では他の壁も追加）
+
+n_histories: 1.0e+6

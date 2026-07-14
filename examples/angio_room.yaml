@@ -1,0 +1,84 @@
+# アンギオ（血管撮影/IVR）室のベースシーン — 術者被ばく評価向け
+# 座標系: cm、z軸が鉛直上向き、床上面が z=0
+#
+# 構成: アンダーテーブル管球（床側から鉛直上向きに照射）＋天井吊りフラット
+# パネル。術者は寝台右側（+x側）に立位、0.5mm鉛当量の防護衣＋天吊り含鉛
+# アクリル板つき。透視（X線TV、アンダーチューブ型）の雛形としても使える。
+#
+# カスタマイズの起点:
+#   - kvp/mas: 透視は低mAs連続、DSA/シネは高mAs。masは1検査の積算代表値
+#   - C-armの角度変更は position/direction を回して表現（斜位は要再計算）
+#   - operator の立ち位置・防護具の有無が術者被ばくの主変数
+
+source:
+  type: xray_tube
+  kvp: 80
+  filtration_mm_al: 3.5          # IVR装置は付加フィルタ込みで厚め
+  mas: 100                       # 1検査の積算の代表値（施設値に合わせて変更）
+  position: [0, 0, 40]           # 焦点: 寝台の60cm下（アンダーテーブル）
+  direction: [0, 0, 1]           # 鉛直上向き
+  field:
+    shape: rect
+    size_cm: [25, 25]            # 受像面での照射野
+    sid_cm: 110                  # 焦点-フラットパネル距離
+
+geometry:
+  - name: patient_torso
+    shape: cylinder
+    material: soft_tissue
+    axis: y                      # 仰臥位（体軸=y）
+    radius_cm: 13
+    height_cm: 60
+    center: [0, 0, 113]          # 寝台上面 z=100 に接地
+
+  - name: patient_head
+    shape: sphere
+    material: soft_tissue
+    radius_cm: 10
+    center: [0, 45, 113]
+
+  - name: table
+    shape: box
+    material: pmma               # カーボン天板の代用
+    size_cm: [60, 220, 2]
+    center: [0, 0, 99]           # 天板上面 z=100
+
+  - name: flat_panel
+    shape: box
+    material: aluminum
+    size_cm: [35, 35, 3]
+    center: [0, 0, 152]          # 患者上方の受像器
+
+  - name: operator
+    shape: cylinder
+    material: soft_tissue
+    axis: z
+    radius_cm: 15
+    height_cm: 170
+    center: [45, 20, 85]         # 寝台右側・患者胸部レベルに立位（術者=評価対象）
+
+  - name: lead_apron
+    shape: box
+    material: lead
+    size_cm: [0.05, 40, 100]     # 0.5mm鉛当量の防護衣（術者の前面）
+    center: [29.9, 20, 110]
+
+  - name: ceiling_shield
+    shape: box
+    material: lead_glass
+    size_cm: [1, 60, 50]         # 天吊り含鉛アクリル板（術者頭頸部の防護）
+    center: [28, 0, 145]
+
+  - name: floor
+    shape: box
+    material: concrete
+    size_cm: [500, 500, 15]
+    center: [0, 0, -7.5]
+
+  - name: side_wall
+    shape: box
+    material: concrete
+    size_cm: [15, 500, 280]
+    center: [-207.5, 0, 140]
+
+n_histories: 1.0e+6

@@ -1,0 +1,62 @@
+# 一般撮影・臥位腹部（テーブルBucky）のベースシーン
+# 座標系: cm、z軸が鉛直上向き、床上面が z=0
+#
+# 構成: 天井側の管球から鉛直下向きに照射、患者は撮影台に仰臥位、
+# 受像器は天板下（Bucky内）。臥位の一般撮影（腹部・腰椎・骨盤等）の雛形。
+#
+# カスタマイズの起点:
+#   - kvp/mas: 部位で変える（腹部80kV/20mAs、腰椎側面は高め等）
+#   - field.size_cm と patient の径: 部位・体格に合わせる
+
+source:
+  type: xray_tube
+  kvp: 80
+  filtration_mm_al: 2.5
+  mas: 20                        # 腹部単純の代表値
+  position: [0, 0, 172]          # 焦点: 受像面の100cm上
+  direction: [0, 0, -1]          # 鉛直下向き
+  field:
+    shape: rect
+    size_cm: [35, 43]            # 半切相当
+    sid_cm: 100                  # 焦点-受像面距離
+
+geometry:
+  - name: patient_torso
+    shape: cylinder
+    material: soft_tissue
+    axis: y                      # 仰臥位（体軸=y）
+    radius_cm: 12
+    height_cm: 60
+    center: [0, 0, 87]           # 天板上面 z=75 に接地
+
+  - name: patient_head
+    shape: sphere
+    material: soft_tissue
+    radius_cm: 10
+    center: [0, 45, 87]
+
+  - name: table
+    shape: box
+    material: pmma               # カーボン天板の代用
+    size_cm: [60, 220, 2]
+    center: [0, 0, 74]           # 天板上面 z=75
+
+  - name: detector
+    shape: box
+    material: aluminum
+    size_cm: [45, 45, 2]
+    center: [0, 0, 72]           # 天板下のBucky受像器（受像面 z=72付近）
+
+  - name: floor
+    shape: box
+    material: concrete
+    size_cm: [400, 400, 15]
+    center: [0, 0, -7.5]
+
+  - name: back_wall
+    shape: box
+    material: concrete
+    size_cm: [400, 15, 280]
+    center: [0, 157.5, 140]
+
+n_histories: 1.0e+6
