@@ -1,0 +1,3 @@
+mu(xraylib, water, 60.0 keV) = 0.205873 /cm
+解析解 Beer-Lambert exp(-mu*t)      = 12.762%
+viveMonte MC 一次透過率 (n=500000, seed=1) = 12.589%  (二項近似の統計誤差 ±0.0469pp)
