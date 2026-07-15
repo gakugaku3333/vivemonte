@@ -1,0 +1,100 @@
+エネルギー=60.0 keV, 照射野=10.0x10.0 cm^2 (平行ビーム近似), n=5000000, seed=1, ビン数=47
+  100000/5000000 histories 完了
+  200000/5000000 histories 完了
+  300000/5000000 histories 完了
+  400000/5000000 histories 完了
+  500000/5000000 histories 完了
+  600000/5000000 histories 完了
+  700000/5000000 histories 完了
+  800000/5000000 histories 完了
+  900000/5000000 histories 完了
+  1000000/5000000 histories 完了
+  1100000/5000000 histories 完了
+  1200000/5000000 histories 完了
+  1300000/5000000 histories 完了
+  1400000/5000000 histories 完了
+  1500000/5000000 histories 完了
+  1600000/5000000 histories 完了
+  1700000/5000000 histories 完了
+  1800000/5000000 histories 完了
+  1900000/5000000 histories 完了
+  2000000/5000000 histories 完了
+  2100000/5000000 histories 完了
+  2200000/5000000 histories 完了
+  2300000/5000000 histories 完了
+  2400000/5000000 histories 完了
+  2500000/5000000 histories 完了
+  2600000/5000000 histories 完了
+  2700000/5000000 histories 完了
+  2800000/5000000 histories 完了
+  2900000/5000000 histories 完了
+  3000000/5000000 histories 完了
+  3100000/5000000 histories 完了
+  3200000/5000000 histories 完了
+  3300000/5000000 histories 完了
+  3400000/5000000 histories 完了
+  3500000/5000000 histories 完了
+  3600000/5000000 histories 完了
+  3700000/5000000 histories 完了
+  3800000/5000000 histories 完了
+  3900000/5000000 histories 完了
+  4000000/5000000 histories 完了
+  4100000/5000000 histories 完了
+  4200000/5000000 histories 完了
+  4300000/5000000 histories 完了
+  4400000/5000000 histories 完了
+  4500000/5000000 histories 完了
+  4600000/5000000 histories 完了
+  4700000/5000000 histories 完了
+  4800000/5000000 histories 完了
+  4900000/5000000 histories 完了
+  5000000/5000000 histories 完了
+[pdd_z0-1] 4.763601e-15 +- 9.969492e-18 Gy/history (相対0.209%)
+[pdd_z1-2] 4.740063e-15 +- 1.037430e-17 Gy/history (相対0.219%)
+[pdd_z2-3] 4.431872e-15 +- 1.019045e-17 Gy/history (相対0.230%)
+[pdd_z3-4] 4.068545e-15 +- 9.899623e-18 Gy/history (相対0.243%)
+[pdd_z4-5] 3.641559e-15 +- 9.456811e-18 Gy/history (相対0.260%)
+[pdd_z5-6] 3.205935e-15 +- 8.948054e-18 Gy/history (相対0.279%)
+[pdd_z6-7] 2.799408e-15 +- 8.396904e-18 Gy/history (相対0.300%)
+[pdd_z7-8] 2.424371e-15 +- 7.859332e-18 Gy/history (相対0.324%)
+[pdd_z8-9] 2.100484e-15 +- 7.356247e-18 Gy/history (相対0.350%)
+[pdd_z9-10] 1.802712e-15 +- 6.873531e-18 Gy/history (相対0.381%)
+[pdd_z10-11] 1.545018e-15 +- 6.372705e-18 Gy/history (相対0.412%)
+[pdd_z11-12] 1.313426e-15 +- 5.885438e-18 Gy/history (相対0.448%)
+[pdd_z12-13] 1.124378e-15 +- 5.491555e-18 Gy/history (相対0.488%)
+[pdd_z13-14] 9.516130e-16 +- 5.068622e-18 Gy/history (相対0.533%)
+[pdd_z14-15] 7.960045e-16 +- 4.629172e-18 Gy/history (相対0.582%)
+[lat_shallow_x-8--7] 3.601199e-16 +- 4.045176e-18 Gy/history (相対1.123%)
+[lat_shallow_x-7--6] 5.107766e-16 +- 4.755951e-18 Gy/history (相対0.931%)
+[lat_shallow_x-6--5] 8.107345e-16 +- 5.950285e-18 Gy/history (相対0.734%)
+[lat_shallow_x-5--4] 4.216354e-15 +- 1.239167e-17 Gy/history (相対0.294%)
+[lat_shallow_x-4--3] 4.509339e-15 +- 1.284510e-17 Gy/history (相対0.285%)
+[lat_shallow_x-3--2] 4.646250e-15 +- 1.310225e-17 Gy/history (相対0.282%)
+[lat_shallow_x-2--1] 4.694097e-15 +- 1.313817e-17 Gy/history (相対0.280%)
+[lat_shallow_x-1-0] 4.773162e-15 +- 1.325699e-17 Gy/history (相対0.278%)
+[lat_shallow_x0-1] 4.754040e-15 +- 1.325292e-17 Gy/history (相対0.279%)
+[lat_shallow_x1-2] 4.718184e-15 +- 1.319643e-17 Gy/history (相対0.280%)
+[lat_shallow_x2-3] 4.634839e-15 +- 1.307598e-17 Gy/history (相対0.282%)
+[lat_shallow_x3-4] 4.485632e-15 +- 1.283241e-17 Gy/history (相対0.286%)
+[lat_shallow_x4-5] 4.195824e-15 +- 1.234535e-17 Gy/history (相対0.294%)
+[lat_shallow_x5-6] 7.991418e-16 +- 5.920231e-18 Gy/history (相対0.741%)
+[lat_shallow_x6-7] 5.051159e-16 +- 4.795861e-18 Gy/history (相対0.949%)
+[lat_shallow_x7-8] 3.529782e-16 +- 4.022270e-18 Gy/history (相対1.140%)
+[lat_10cm_x-8--7] 4.154862e-16 +- 4.482975e-18 Gy/history (相対1.079%)
+[lat_10cm_x-7--6] 5.450174e-16 +- 5.144864e-18 Gy/history (相対0.944%)
+[lat_10cm_x-6--5] 7.229233e-16 +- 5.870884e-18 Gy/history (相対0.812%)
+[lat_10cm_x-5--4] 1.435314e-15 +- 7.836061e-18 Gy/history (相対0.546%)
+[lat_10cm_x-4--3] 1.607545e-15 +- 8.311212e-18 Gy/history (相対0.517%)
+[lat_10cm_x-3--2] 1.699028e-15 +- 8.520055e-18 Gy/history (相対0.501%)
+[lat_10cm_x-2--1] 1.779029e-15 +- 8.747378e-18 Gy/history (相対0.492%)
+[lat_10cm_x-1-0] 1.806790e-15 +- 8.850619e-18 Gy/history (相対0.490%)
+[lat_10cm_x0-1] 1.798635e-15 +- 8.830230e-18 Gy/history (相対0.491%)
+[lat_10cm_x1-2] 1.775490e-15 +- 8.740463e-18 Gy/history (相対0.492%)
+[lat_10cm_x2-3] 1.723395e-15 +- 8.592244e-18 Gy/history (相対0.499%)
+[lat_10cm_x3-4] 1.610327e-15 +- 8.318810e-18 Gy/history (相対0.517%)
+[lat_10cm_x4-5] 1.443316e-15 +- 7.859988e-18 Gy/history (相対0.545%)
+[lat_10cm_x5-6] 7.267973e-16 +- 5.894647e-18 Gy/history (相対0.811%)
+[lat_10cm_x6-7] 5.517471e-16 +- 5.165562e-18 Gy/history (相対0.936%)
+[lat_10cm_x7-8] 4.160059e-16 +- 4.510682e-18 Gy/history (相対1.084%)
+
+結果を docs/egs5_crosscheck/vivemonte_pdd60_results.json に保存しました。
