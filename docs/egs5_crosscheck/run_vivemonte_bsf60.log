@@ -1,0 +1,15 @@
+エネルギー=60.0 keV, 照射野=10.0x10.0 cm^2 (平行ビーム近似), スコア層厚=0.2 cm, n=500000/ラン, seed=1
+density(water)=1.0000 g/cm^3  density(air)=0.001205 g/cm^3
+mu_en/rho(water,60keV)=0.03190 cm^2/g  mu_en/rho(air,60keV)=0.03041 cm^2/g
+
+[自由空気(分母)] mean=4.401002e-04 keV/history  SEM=2.967797e-08 keV/history  relSEM=0.0067%
+[ファントム表面層(分子)] mean=5.395455e-01 keV/history  SEM=7.353197e-04 keV/history  relSEM=0.1363%
+
+スコア層体積=20.0 cm^3  質量(air)=0.0241 g  質量(water)=20.0000 g
+質量あたりカーマ: 自由空気=1.826142e-02 keV/g/history  水表面層=2.697728e-02 keV/g/history
+
+BSF (viveMonte) = 1.4773 ± 0.0020  (1sigma, 相対0.136%)
+
+EGS5側 (docs/egs5_crosscheck/bsf60_NOTES.md, IBOUND=1, n=500,000/run):
+  BSF (EGS5) = 1.4529 ± 0.0243  (1sigma, 相対1.670%)
+  差 = +0.0244  (相対+1.68%,  合成誤差0.0244に対し1.00sigma)
