@@ -1,0 +1,110 @@
+ PEGS5-call comes next
+
+
+ inseed=           1      (seed for generating unique sequences of Ranlux)
+ ranlux luxury level set by rluxgo : 1     p=  48
+ ranlux initialized by rluxgo from seed           1
+
+ Start pdd60_phantom_v2
+ Call hatch to get cross-section data
+
+ HATCH-call comes next
+
+ RAYLEIGH OPTION REQUESTED FOR MEDIUM NUMBER  1
+
+ EGS SUCCESSFULLY 'HATCHED' FOR ONE MEDIUM.
+
+ Knock-on electrons can be created and any electron followed down to
+                                          0.010 MeV kinetic energy
+ Brem photons can be created and any photon followed down to
+                                          0.010 MeV
+
+ PDD + lateral profile run (30x30x20 cm water, 47 analytic bins) -- v2 (Step 2 instrumentation)
+ ncase=  10000000
+
+ Sanity check: mean total energy deposited anywhere in phantom (MeV) =  0.37397554E-01
+ SEM (MeV)                                          =  0.77347379E-05
+ Relative SEM (%)                                   =    0.0207
+
+ pdd_z0-1                 mean(MeV)=  0.116087E-03 sem(MeV)=  0.631764E-06 relerr(%)=   0.5442
+ pdd_z1-2                 mean(MeV)=  0.116397E-03 sem(MeV)=  0.634914E-06 relerr(%)=   0.5455
+ pdd_z2-3                 mean(MeV)=  0.109089E-03 sem(MeV)=  0.613923E-06 relerr(%)=   0.5628
+ pdd_z3-4                 mean(MeV)=  0.100400E-03 sem(MeV)=  0.590787E-06 relerr(%)=   0.5884
+ pdd_z4-5                 mean(MeV)=  0.892457E-04 sem(MeV)=  0.556124E-06 relerr(%)=   0.6231
+ pdd_z5-6                 mean(MeV)=  0.790012E-04 sem(MeV)=  0.521417E-06 relerr(%)=   0.6600
+ pdd_z6-7                 mean(MeV)=  0.690792E-04 sem(MeV)=  0.487845E-06 relerr(%)=   0.7062
+ pdd_z7-8                 mean(MeV)=  0.600614E-04 sem(MeV)=  0.455575E-06 relerr(%)=   0.7585
+ pdd_z8-9                 mean(MeV)=  0.516627E-04 sem(MeV)=  0.421677E-06 relerr(%)=   0.8162
+ pdd_z9-10                mean(MeV)=  0.442742E-04 sem(MeV)=  0.389717E-06 relerr(%)=   0.8802
+ pdd_z10-11               mean(MeV)=  0.379528E-04 sem(MeV)=  0.361038E-06 relerr(%)=   0.9513
+ pdd_z11-12               mean(MeV)=  0.322468E-04 sem(MeV)=  0.334116E-06 relerr(%)=   1.0361
+ pdd_z12-13               mean(MeV)=  0.281453E-04 sem(MeV)=  0.312244E-06 relerr(%)=   1.1094
+ pdd_z13-14               mean(MeV)=  0.229691E-04 sem(MeV)=  0.281352E-06 relerr(%)=   1.2249
+ pdd_z14-15               mean(MeV)=  0.197982E-04 sem(MeV)=  0.261646E-06 relerr(%)=   1.3216
+ lat_shallow_x-8--7       mean(MeV)=  0.464788E-05 sem(MeV)=  0.126995E-06 relerr(%)=   2.7323
+ lat_shallow_x-7--6       mean(MeV)=  0.639487E-05 sem(MeV)=  0.149237E-06 relerr(%)=   2.3337
+ lat_shallow_x-6--5       mean(MeV)=  0.100634E-04 sem(MeV)=  0.188463E-06 relerr(%)=   1.8728
+ lat_shallow_x-5--4       mean(MeV)=  0.513850E-04 sem(MeV)=  0.417110E-06 relerr(%)=   0.8117
+ lat_shallow_x-4--3       mean(MeV)=  0.556115E-04 sem(MeV)=  0.437545E-06 relerr(%)=   0.7868
+ lat_shallow_x-3--2       mean(MeV)=  0.570572E-04 sem(MeV)=  0.441862E-06 relerr(%)=   0.7744
+ lat_shallow_x-2--1       mean(MeV)=  0.580676E-04 sem(MeV)=  0.446999E-06 relerr(%)=   0.7698
+ lat_shallow_x-1-0        mean(MeV)=  0.580554E-04 sem(MeV)=  0.446049E-06 relerr(%)=   0.7683
+ lat_shallow_x0-1         mean(MeV)=  0.580313E-04 sem(MeV)=  0.444403E-06 relerr(%)=   0.7658
+ lat_shallow_x1-2         mean(MeV)=  0.583667E-04 sem(MeV)=  0.447999E-06 relerr(%)=   0.7676
+ lat_shallow_x2-3         mean(MeV)=  0.572054E-04 sem(MeV)=  0.442222E-06 relerr(%)=   0.7730
+ lat_shallow_x3-4         mean(MeV)=  0.549310E-04 sem(MeV)=  0.433781E-06 relerr(%)=   0.7897
+ lat_shallow_x4-5         mean(MeV)=  0.523398E-04 sem(MeV)=  0.423595E-06 relerr(%)=   0.8093
+ lat_shallow_x5-6         mean(MeV)=  0.985274E-05 sem(MeV)=  0.186127E-06 relerr(%)=   1.8891
+ lat_shallow_x6-7         mean(MeV)=  0.591120E-05 sem(MeV)=  0.141291E-06 relerr(%)=   2.3902
+ lat_shallow_x7-8         mean(MeV)=  0.438440E-05 sem(MeV)=  0.123891E-06 relerr(%)=   2.8257
+ lat_10cm_x-8--7          mean(MeV)=  0.542992E-05 sem(MeV)=  0.137807E-06 relerr(%)=   2.5379
+ lat_10cm_x-7--6          mean(MeV)=  0.677146E-05 sem(MeV)=  0.152097E-06 relerr(%)=   2.2462
+ lat_10cm_x-6--5          mean(MeV)=  0.871823E-05 sem(MeV)=  0.173230E-06 relerr(%)=   1.9870
+ lat_10cm_x-5--4          mean(MeV)=  0.176346E-04 sem(MeV)=  0.243623E-06 relerr(%)=   1.3815
+ lat_10cm_x-4--3          mean(MeV)=  0.195544E-04 sem(MeV)=  0.257952E-06 relerr(%)=   1.3191
+ lat_10cm_x-3--2          mean(MeV)=  0.214122E-04 sem(MeV)=  0.270467E-06 relerr(%)=   1.2631
+ lat_10cm_x-2--1          mean(MeV)=  0.218410E-04 sem(MeV)=  0.274217E-06 relerr(%)=   1.2555
+ lat_10cm_x-1-0           mean(MeV)=  0.219495E-04 sem(MeV)=  0.273838E-06 relerr(%)=   1.2476
+ lat_10cm_x0-1            mean(MeV)=  0.223247E-04 sem(MeV)=  0.275280E-06 relerr(%)=   1.2331
+ lat_10cm_x1-2            mean(MeV)=  0.214327E-04 sem(MeV)=  0.269523E-06 relerr(%)=   1.2575
+ lat_10cm_x2-3            mean(MeV)=  0.213240E-04 sem(MeV)=  0.268766E-06 relerr(%)=   1.2604
+ lat_10cm_x3-4            mean(MeV)=  0.194130E-04 sem(MeV)=  0.257331E-06 relerr(%)=   1.3256
+ lat_10cm_x4-5            mean(MeV)=  0.175542E-04 sem(MeV)=  0.244761E-06 relerr(%)=   1.3943
+ lat_10cm_x5-6            mean(MeV)=  0.896599E-05 sem(MeV)=  0.175749E-06 relerr(%)=   1.9602
+ lat_10cm_x6-7            mean(MeV)=  0.638873E-05 sem(MeV)=  0.146668E-06 relerr(%)=   2.2957
+ lat_10cm_x7-8            mean(MeV)=  0.507673E-05 sem(MeV)=  0.132338E-06 relerr(%)=   2.6068
+
+
+ =======================================================================
+ Step 2: Compton energy-transfer to recoil electron <T> instrumentation
+ =======================================================================
+
+ [PRIMARY: photon's first-ever Compton event, exactly 60 keV incident]
+   N events                =      9027250.
+   Sum(T)           (MeV)  =  0.50708065E+05
+   <T> = mean(T)    (MeV)  =  0.56172218E-02
+   SEM(<T>)         (MeV)  =  0.11985201E-05
+   relative SEM     (%)    =   0.02134
+
+   <T> (keV)               =    5.617222 +/-   0.001199
+   t_measured = <T>/60keV  =    0.093620 +/-     0.000020
+
+   Step 0 desk-check t_KN(60keV) =    0.093630
+   t_measured - t_KN              =   -0.000010
+   difference in units of sigma   =    -0.482
+
+ [ALL: every Compton event, any generation/energy]
+   N events                =     30233185.
+   Sum(T)           (MeV)  =  0.13180127E+06
+   <T> = mean(T)    (MeV)  =  0.43594902E-02
+   SEM(<T>)         (MeV)  =  0.57140075E-06
+   relative SEM     (%)    =   0.01311
+
+ [Channel edep breakdown, whole phantom (region 2)]
+   N photoelectric events        =      5310235.
+   Sum edep, photoelectric (MeV) =  0.24217427E+06
+   Sum edep, Compton (MeV)       =  0.13180127E+06
+   Sum (photo+compton)     (MeV) =  0.37397554E+06
+   sumtot (existing all-edep tally, MeV) =  0.37397554E+06
+   (regression/consistency check: the two lines above should match to rounding)
+
