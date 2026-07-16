@@ -89,7 +89,11 @@ uniform grid independently of the transport geometry, purely for scoring. Two in
 cross-validated against each other in [tests/test_tally.py](tests/test_tally.py): a collision estimator
 (`energy_deposited`, scored at interaction points) and a track-length kerma estimator (path-integral over the
 grid). H*(10) is a fluence-based protection quantity (different from kerma), computed by normalizing the
-track-length integral by voxel volume (`VoxelGrid.h10_map_pSv`).
+track-length integral by voxel volume (`VoxelGrid.h10_map_pSv`). `accumulate_track_length` splits each flight
+segment into substeps and scores a **stratified random point within each substep** (not the substep midpoint) —
+this makes the spatial-binning step an unbiased estimator regardless of substep length, which matters when many
+segments start exactly on a voxel boundary (e.g. a `field.shape: parallel` beam entering a phantom face); see
+lessons_learned for the bug this replaced.
 
 **Units and calibration**: relative output is `Gy/history` / `pSv/history`. When `scene.yaml`'s `source.mas` is
 set, `photon_count_through_field` (in source.py) uses SpekPy's absolute fluence to get the real photon count
@@ -109,13 +113,21 @@ covered by a regression test in `tests/test_materials.py`. Re-fetch data with `s
 
 ## Known sharp edges (read before trusting "max dose"/"max H*(10)" output)
 
-`vivemonte run --dose-grid`'s reported max absorbed dose / max H*(10) frequently lands in a non-physical spot: a
+`vivemonte run --dose-grid`'s reported max absorbed dose / max H*(10) can still land in a non-physical spot: a
 background (air) voxel near the 1/r² point-source singularity, or an air voxel just outside a material boundary
-due to backscatter (this gets worse, not better, with finer grid resolution — it's a boundary effect, not
-discretization error). The CLI detects and prints a `[警告]` when this happens
+due to backscatter. The CLI detects and prints a `[警告]` when this happens
 (`background_medium_warning`/`near_source_air_warning` in diagnostics.py). For a real exposure-point estimate (patient
 surface, operator position, etc.), lay a fine grid directly at that position rather than trusting the global max.
-Full writeup: [docs/lessons_learned.md](docs/lessons_learned.md).
+
+A related but distinct effect: at fine resolution (≲0.5cm) the reported max can still grow as resolution gets
+finer. This is **not** the same bug as a since-fixed systematic bias where flight segments starting exactly on a
+voxel boundary (all photons of a `field.shape: parallel` beam, for instance) were under-scored in that boundary
+voxel — that one was a real bug in the track-length tally's substep scoring and is fixed (see
+`accumulate_track_length` above). The residual fine-resolution growth is believed to be extreme-value statistics
+from `max_substeps` clamping on long segments, not yet independently re-verified below ~1cm. Both warnings above
+only fire when the max lands on `background`/air, so they don't catch this class of issue when both neighboring
+voxels are legitimately the declared material — treat single-voxel maxima at declared-material boundaries with
+the same caution. Full writeup: [docs/lessons_learned.md](docs/lessons_learned.md).
 
 ## Scene files
 
@@ -124,3 +136,12 @@ Full writeup: [docs/lessons_learned.md](docs/lessons_learned.md).
 self-correction loop, plus non-fatal physics-sanity warnings (e.g. filtration below legal minimum, source position
 inside a solid). [examples/chest_room.yaml](examples/chest_room.yaml) is the canonical worked example (standing
 chest X-ray room).
+
+**Non-clinical/research sources**: `source.kvp` (polychromatic SpekPy/Kramers spectrum) is the default and required
+unless `source.spectrum` is given instead — an explicit `[{energy_keV, weight}, ...]` list (e.g. a single entry for
+a monoenergetic beam), used for physics cross-checks against reference codes rather than clinical scenes. `kvp` and
+`spectrum` are mutually exclusive (validated), as are `spectrum` with `mas`/`ctdi_vol_mGy`/`heel_effect` (those are
+fixed to the kvp-based SpekPy path and would silently disagree with an overridden spectrum) — such scenes only
+produce relative `Gy/history` output. Similarly `source.field.shape: parallel` (non-divergent beam, `size_cm` only,
+no `sid_cm`) is available alongside `rect`/`cone` for the same reference-code-matching use case, with the same
+`mas`/`heel_effect` restriction. See [examples/water_phantom_pdd_ocr.yaml](examples/water_phantom_pdd_ocr.yaml).

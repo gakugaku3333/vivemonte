@@ -96,7 +96,7 @@ def sample_source_photons(src: dict, n: int, rng: np.random.Generator):
     pos = np.asarray(src["position"], dtype=float)
     d = np.asarray(src["direction"], dtype=float)
     fld = src["field"]
-    sid = fld["sid_cm"]
+    sid = fld.get("sid_cm")  # parallel（非発散）は不使用
     u, v = beam_basis(d)
 
     # 焦点位置と局所基底（d,u,v）を決める。回転時は光子ごとの(n,3)配列、
@@ -167,6 +167,14 @@ def sample_source_photons(src: dict, n: int, rng: np.random.Generator):
         dirs = (cos_t[:, None] * d_a
                 + (sin_t * np.cos(phi))[:, None] * u_a
                 + (sin_t * np.sin(phi))[:, None] * v_a)
+    elif shape == "parallel":
+        # 非発散ビーム: 全光子が同一方向d_aへ進み、位置だけがsize_cmの面上に
+        # 一様分布する（scene.pyでmas/heel_effectとの併用は検証時に禁止済み）。
+        w, h = fld["size_cm"]
+        su = rng.uniform(-w / 2, w / 2, n)
+        sv = rng.uniform(-h / 2, h / 2, n)
+        origins = origins + su[:, None] * u_a + sv[:, None] * v_a
+        dirs = np.broadcast_to(d_a, (n, 3)).copy()
     else:
         w, h = fld["size_cm"]
 

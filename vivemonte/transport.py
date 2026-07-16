@@ -74,15 +74,21 @@ class BatchResult:
 def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
                        geometry: Geometry, rng: np.random.Generator,
                        grid: VoxelGrid | None = None,
-                       recorder: TrajectoryRecorder | None = None) -> BatchResult:
+                       recorder: TrajectoryRecorder | None = None,
+                       tally_rng: np.random.Generator | None = None) -> BatchResult:
     """光源サンプリングとは独立な輸送カーネル本体（テストで直接叩ける）。
 
     pos/dirv/energy は呼び出し側の配列を破壊的に更新する。
     grid を渡すと、各飛行区間ごとにカーマのtrack-length estimatorを
-    ボクセルグリッドへ積算する（vivemonte/tally.py参照）。
+    ボクセルグリッドへ積算する（vivemonte/tally.py参照）。タリーの層化
+    サンプリングにはtally_rng（未指定ならrngからspawnで決定的に導出）を使う。
+    spawnは輸送の乱数列を消費しないため、grid有無で輸送結果（吸収/脱出・
+    相互作用サンプリング）は同一seedならビット一致のまま変わらない。
     recorder を渡すと、各飛行区間を可視化用に記録する（既定Noneで無効、
     乱数を一切消費しないため同一seedでの輸送結果に影響しない）。
     """
+    if grid is not None and tally_rng is None:
+        tally_rng = rng.spawn(1)[0]
     n = pos.shape[0]
     alive = np.ones(n, dtype=bool)
     tau = -np.log(rng.random(n))
@@ -106,8 +112,9 @@ def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
 
         if grid is not None:
             mu_en_linear = _mu_en_linear_batch(mat, e)
-            accumulate_track_length(grid.kerma_keV, grid, o, d, ds, e * mu_en_linear)
-            accumulate_track_length(grid.h10_track_pSv_cm3, grid, o, d, ds, h_star_10_per_fluence(e))
+            accumulate_track_length(grid.kerma_keV, grid, o, d, ds, e * mu_en_linear, tally_rng)
+            accumulate_track_length(grid.h10_track_pSv_cm3, grid, o, d, ds,
+                                     h_star_10_per_fluence(e), tally_rng)
 
         pos[idx] = ends
 

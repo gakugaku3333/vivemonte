@@ -98,8 +98,15 @@ def scene_to_json(scene: Scene, trajectories: list[dict] | None = None) -> dict:
         field_label = f"Ø{fld['diameter_cm']:g}"
     else:
         field_label = f"{fld['size_cm'][0]:g}×{fld['size_cm'][1]:g}"
-    beam = {"source": pos, "corners": corners, "kvp": src["kvp"],
-            "field_label": field_label, "sid": fld["sid_cm"]}
+    spec = src.get("spectrum")  # sample_spectrum()と同じ優先順位（spectrum > kvp）
+    if spec:
+        energy_label = (f"{spec[0]['energy_keV']:g} keV（単色）" if len(spec) == 1
+                         else f"spectrum（{len(spec)}点）")
+    else:
+        energy_label = f"{src['kvp']:g} kV"
+    beam = {"source": pos, "corners": corners, "energy_label": energy_label,
+            "field_label": field_label, "sid": fld.get("sid_cm"),
+            "source_label": "線源面中心" if fld.get("shape", "rect") == "parallel" else "焦点"}
 
     rot = src.get("rotation")
     ring_pts = []
@@ -307,7 +314,7 @@ function draw() {
     if (ps) {
       ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(ps[0], ps[1], 5, 0, 7); ctx.fill();
       ctx.font = 'bold 12px sans-serif';
-      ctx.fillText(`焦点 ${b.kvp} kV${b.rotation_ring ? '（回転近似）' : ''}`, ps[0]+9, ps[1]+4);
+      ctx.fillText(`${b.source_label} ${b.energy_label}${b.rotation_ring ? '（回転近似）' : ''}`, ps[0]+9, ps[1]+4);
     }
   }
   if (ckTraj.checked && DATA.trajectories.length) {
@@ -361,7 +368,8 @@ function draw() {
   lg.innerHTML = '<b style="font-size:12px">材料</b><br>' +
     Object.entries(mats).map(([m, c]) =>
       `<span class="sw" style="background:${c}"></span>${m}`).join('<br>') +
-    `<br><span class="sw" style="background:#fbbf24"></span>X線ビーム（照射野 ${DATA.beam.field_label} cm @ SID ${DATA.beam.sid} cm）`;
+    `<br><span class="sw" style="background:#fbbf24"></span>X線ビーム（照射野 ${DATA.beam.field_label} cm` +
+    (DATA.beam.sid != null ? ` @ SID ${DATA.beam.sid} cm）` : '、平行ビーム）');
   if (DATA.trajectories.length) {
     lg.innerHTML += '<br><br><b style="font-size:12px">軌跡（' + DATA.trajectories.length + '光子）</b><br>' +
       '● 光電吸収　○ コンプトン　◇ レイリー　× 脱出<br>' +

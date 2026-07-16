@@ -1,0 +1,12 @@
+histories: 3,000,000
+吸収（光電）割合: 0.5318
+脱出割合: 0.4682
+平均相互作用回数/光子: 3.8989
+材料別吸収エネルギー [MeV/history合計]:
+  water: 112089
+  air: 252.767
+線量グリッド: shape=(130, 120, 130), resolution=1.0cm
+  最大吸収線量 [Gy/history]: 4.78036e-15
+  総カーマ: 114378 MeV (38.126 keV/history)
+  最大H*(10) [pSv/history]: 0.00775001
+線量グリッドを書き出しました: docs/egs5_crosscheck/water_phantom_pdd_ocr_dose.npz

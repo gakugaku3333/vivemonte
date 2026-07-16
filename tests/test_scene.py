@@ -56,3 +56,38 @@ def test_spectrum_with_ctdi_rejected():
                                  ctdi_vol_mGy=10.0, rotation={"isocenter": [0, 0, 10]}))
     assert not scene.ok
     assert any("ctdi_vol_mGy" in e.message for e in scene.errors)
+
+
+def test_spectrum_with_kvp_rejected():
+    """spectrum指定時にkvpも残っていると、輸送(spectrum優先)とpreview表示が
+    食い違う温床になる（vive-auditor所見）。曖昧さを許さずエラーにする。"""
+    scene = validate_scene(_src(kvp=80.0, spectrum=[{"energy_keV": 60.0, "weight": 1.0}]))
+    assert not scene.ok
+    assert any("kvp" in e.message for e in scene.errors)
+
+
+def test_parallel_field_no_sid_required():
+    scene = validate_scene(_src(spectrum=[{"energy_keV": 60.0, "weight": 1.0}],
+                                 field={"shape": "parallel", "size_cm": [10, 10]}))
+    assert scene.ok, scene.errors
+
+
+def test_parallel_field_requires_size_cm():
+    scene = validate_scene(_src(spectrum=[{"energy_keV": 60.0, "weight": 1.0}],
+                                 field={"shape": "parallel"}))
+    assert not scene.ok
+    assert any("size_cm" in e.path for e in scene.errors)
+
+
+def test_parallel_field_with_mas_rejected():
+    scene = validate_scene(_src(kvp=100.0, mas=4.0,
+                                 field={"shape": "parallel", "size_cm": [10, 10]}))
+    assert not scene.ok
+    assert any("mas" in e.message for e in scene.errors)
+
+
+def test_parallel_field_with_heel_effect_rejected():
+    scene = validate_scene(_src(kvp=100.0, heel_effect=True, anode_direction=[1, 0, 0],
+                                 field={"shape": "parallel", "size_cm": [10, 10]}))
+    assert not scene.ok
+    assert any("heel_effect" in e.message for e in scene.errors)

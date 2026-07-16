@@ -26,7 +26,8 @@ def test_accumulate_exact_energy_conservation():
     length_cm = np.full(n, 7.3)          # ボクセル境界をまたぐ長さ
     weight = np.full(n, 12.0)            # keV/cm
 
-    accumulate_track_length(grid.kerma_keV, grid, origin, direction, length_cm, weight, substep_cm=0.3)
+    accumulate_track_length(grid.kerma_keV, grid, origin, direction, length_cm, weight,
+                             np.random.default_rng(0), substep_cm=0.3)
 
     expected_total = np.sum(length_cm * weight)
     assert np.isclose(grid.kerma_keV.sum(), expected_total, rtol=1e-9)
@@ -41,7 +42,8 @@ def test_accumulate_partial_out_of_grid():
     length_cm = np.full(n, 20.0)
     weight = np.full(n, 5.0)
 
-    accumulate_track_length(grid.kerma_keV, grid, origin, direction, length_cm, weight, substep_cm=0.5)
+    accumulate_track_length(grid.kerma_keV, grid, origin, direction, length_cm, weight,
+                             np.random.default_rng(0), substep_cm=0.5)
 
     total_in_grid = np.sum(length_cm * weight) * (10.0 / 20.0)  # グリッド内は全長の半分
     assert grid.kerma_keV.sum() > 0
@@ -84,7 +86,8 @@ def test_h10_accumulate_exact_track_length():
     coeff = h_star_10_per_fluence(60.0)[0]  # pSv・cm²
     weight = np.full(n, coeff)
 
-    accumulate_track_length(grid.h10_track_pSv_cm3, grid, origin, direction, length_cm, weight, substep_cm=0.3)
+    accumulate_track_length(grid.h10_track_pSv_cm3, grid, origin, direction, length_cm, weight,
+                             np.random.default_rng(0), substep_cm=0.3)
 
     expected_total = np.sum(length_cm * weight)  # pSv・cm³
     assert np.isclose(grid.h10_track_pSv_cm3.sum(), expected_total, rtol=1e-9)
@@ -102,10 +105,36 @@ def test_h10_map_normalizes_by_voxel_volume():
     weight = np.full(n, coeff)
 
     accumulate_track_length(grid.h10_track_pSv_cm3, grid, origin, direction,
-                             np.full(n, length_cm), weight, substep_cm=0.5)
+                             np.full(n, length_cm), weight,
+                             np.random.default_rng(0), substep_cm=0.5)
 
     expected_pSv = n * coeff * length_cm / grid.voxel_volume_cm3()
     assert np.isclose(grid.h10_map_pSv().sum(), expected_pSv, rtol=1e-6)
+
+
+def test_boundary_start_surface_voxel_unbiased():
+    """区間の始点がボクセル境界ちょうどに揃うケース（parallel照射野で全光子が
+    ファントム前面から出発する状況）の回帰テスト。
+
+    旧実装（サブステップ中点の決定的サンプリング）では量子化誤差の位相が
+    全区間で同期し、表面ボクセル層が約-3%系統的に過小評価されていた
+    （vive-auditor監査で発見）。層化乱数点なら不偏なので、指数分布の区間長で
+    表面ボクセルへの割り当てが厳密な期待値 Σ min(L_i, 1) に統計誤差内で一致する。"""
+    grid = VoxelGrid.from_bbox(np.array([0.0, 0.0, 0.0]), np.array([20.0, 10.0, 10.0]), resolution_cm=1.0)
+    rng = np.random.default_rng(11)
+    n = 200_000
+    mfp_cm = 4.86  # 60 keV水の平均自由行程相当
+    length_cm = rng.exponential(mfp_cm, n).clip(max=19.9)
+    origin = np.tile(np.array([0.0, 5.5, 5.5]), (n, 1))  # 全区間がx=0境界ちょうどから出発
+    direction = np.tile(np.array([1.0, 0.0, 0.0]), (n, 1))
+    weight = np.ones(n)
+
+    accumulate_track_length(grid.kerma_keV, grid, origin, direction, length_cm, weight,
+                             np.random.default_rng(12))
+
+    surface = grid.kerma_keV[0, 5, 5]              # x=[0,1)の表面ボクセル
+    exact = np.minimum(length_cm, 1.0).sum()       # 厳密な重なり長の合計
+    assert abs(surface - exact) / exact < 0.005    # 旧実装は-2.7%ずれてこのテストに落ちる
 
 
 def test_run_transport_dose_grid_h10_finite_and_nonnegative():

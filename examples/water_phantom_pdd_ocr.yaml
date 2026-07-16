@@ -1,0 +1,25 @@
+# 水ファントムPDD/OCR実演シーン（学会抄録用、会話ワークフローの実演）
+# 座標系: cm、z軸が鉛直上向き、床上面が z=0
+# EGS5相互検証(Phase 2b, docs/egs5_crosscheck/PDD_RESULTS.md)と完全に同条件
+# （単色60 keV、10x10cm²、平行ビーム近似）にして、会話ワークフローでも
+# 同じ結果に行き着くことを実演する。
+
+source:
+  type: xray_tube
+  spectrum:                    # 単色60 keV（scene.py: source.spectrumがkvpの代替）
+    - energy_keV: 60.0
+      weight: 1.0
+  position: [0, 0, 15]         # 平行ビームの発生面中心。ファントム前面(y=0)上、高さ15cm
+  direction: [0, 1, 0]         # +y方向（水平照射）
+  field:
+    shape: parallel            # 非発散（scene.py: SID不要、mas/heel_effectと併用不可）
+    size_cm: [10, 10]          # EGS5相互検証と同じ10x10cm²
+
+geometry:
+  - name: water_phantom
+    shape: box
+    material: water
+    size_cm: [30, 20, 30]      # x:側方(OCR用) y:深さ(PDD用、前面y=0〜背面y=20) z:高さ
+    center: [0, 10, 15]
+
+n_histories: 3.0e+6

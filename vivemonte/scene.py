@@ -77,6 +77,13 @@ def validate_scene(raw: dict) -> Scene:
                               "spectrum は [{energy_keV: 正の数値, weight: 正の数値}, ...] の形式で"
                               "指定してください（単色ビームなら1要素、例: "
                               "[{energy_keV: 60, weight: 1.0}]）"))
+            # spectrum指定時にkvpも残っていると、実輸送(sample_spectrum)はspectrumを
+            # 使うのにpreview表示はkvp側を見てしまう食い違いの温床になる（監査所見）。
+            # 曖昧さを許さず、spectrumのみの指定を必須にする。
+            if kvp is not None:
+                errors.append(SceneError("source",
+                              "source.spectrum と source.kvp は併用できません（spectrumが実輸送で"
+                              "優先されkvpは無視されるため紛らわしいです）。spectrumのみ指定してください"))
             # spectrumを上書きしても、mAs絶対校正（photon_count_through_field）と
             # ヒール効果（heel_spectra_for_source）はkvpベースのSpekPy計算に固定されて
             # おり、spectrumで指定した実際のエネルギーとは食い違う。相対値[Gy/history]
@@ -118,7 +125,7 @@ def validate_scene(raw: dict) -> Scene:
                 if not isinstance(dia, (int, float)) or dia <= 0:
                     errors.append(SceneError("source.field.diameter_cm",
                                   "cone照射野にはSID面での開口直径 diameter_cm（正の数値）が必要です"))
-            elif fshape == "rect":
+            elif fshape in ("rect", "parallel"):
                 size = fld.get("size_cm")
                 if not (isinstance(size, (list, tuple)) and len(size) == 2
                         and all(isinstance(x, (int, float)) and x > 0 for x in size)):
@@ -126,10 +133,26 @@ def validate_scene(raw: dict) -> Scene:
                                   "照射野サイズは正の数値2要素 [幅, 高さ] で指定してください"))
             else:
                 errors.append(SceneError("source.field.shape",
-                              f"shape={fshape!r} — rect（矩形、既定）/ cone（円錐、立体角一様）のいずれかです"))
-            sid = fld.get("sid_cm")
-            if not isinstance(sid, (int, float)) or sid <= 0:
-                errors.append(SceneError("source.field.sid_cm", "SID（焦点-照射野定義面距離）は正の数値です"))
+                              f"shape={fshape!r} — rect（矩形、既定）/ cone（円錐、立体角一様）/ "
+                              "parallel（平行ビーム、非発散）のいずれかです"))
+            if fshape == "parallel":
+                # 平行ビームは発散を持たないためSIDは無意味（未指定でよい）。
+                # 絶対線量校正（mas/heel_effect）はSID基準のSpekPy計算に固定されて
+                # おり非対応のため、併用を禁止する。
+                if src.get("mas") is not None:
+                    errors.append(SceneError("source",
+                                  "source.field.shape: parallel と source.mas は併用できません"
+                                  "（mAs絶対校正はSID基準のSpekPyフルエンスに固定されており、"
+                                  "非発散ビームには対応していません）。相対値[Gy/history]のみで"
+                                  "良ければmasを外してください"))
+                if src.get("heel_effect"):
+                    errors.append(SceneError("source",
+                                  "source.field.shape: parallel と source.heel_effect は併用できません"
+                                  "（ヒール効果はSID基準の軸外スペクトルに固定されています）"))
+            else:
+                sid = fld.get("sid_cm")
+                if not isinstance(sid, (int, float)) or sid <= 0:
+                    errors.append(SceneError("source.field.sid_cm", "SID（焦点-照射野定義面距離）は正の数値です"))
         filt = src.get("filtration_mm_al", 2.5)
         if not isinstance(filt, (int, float)) or filt < 0:
             errors.append(SceneError("source.filtration_mm_al", "総濾過は0以上の数値（mmAl）です"))
@@ -266,14 +289,14 @@ def validate_scene(raw: dict) -> Scene:
 
 
 def field_corners(src: dict) -> list[list[float]]:
-    """照射野定義面（SID位置）における照射野の外周点を返す。
+    """照射野定義面（SID位置。parallelはposition自体の面）における照射野の外周点を返す。
 
-    rect照射野は4隅、cone照射野は開口円周上の16点（描画用の多角形近似）。
+    rect/parallel照射野は4隅、cone照射野は開口円周上の16点（描画用の多角形近似）。
     """
     pos = src["position"]
     d = src["direction"]
     fld = src["field"]
-    sid = fld["sid_cm"]
+    shape = fld.get("shape", "rect")
     # 中心軸に直交する基底ベクトル（uを水平寄り、vをその直交に取る）
     if abs(d[2]) < 0.999:
         u = [-d[1], d[0], 0.0]
@@ -282,8 +305,13 @@ def field_corners(src: dict) -> list[list[float]]:
     n = math.sqrt(sum(x * x for x in u))
     u = [x / n for x in u]
     v = [d[1] * u[2] - d[2] * u[1], d[2] * u[0] - d[0] * u[2], d[0] * u[1] - d[1] * u[0]]
-    ctr = [pos[k] + d[k] * sid for k in range(3)]
-    if fld.get("shape", "rect") == "cone":
+    if shape == "parallel":
+        # 非発散ビーム: 定義面はposition自体（SIDを持たない）
+        w, h = fld["size_cm"]
+        return [[pos[k] + su * w / 2 * u[k] + sv * h / 2 * v[k] for k in range(3)]
+                for su, sv in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
+    ctr = [pos[k] + d[k] * fld["sid_cm"] for k in range(3)]
+    if shape == "cone":
         r = fld["diameter_cm"] / 2.0
         pts = []
         for i in range(16):

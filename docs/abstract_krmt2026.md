@@ -74,6 +74,15 @@
      が差し戻し、真因が断面積の物理モデル差（束縛補正の有無）と判明したため
      再実行して基準適合に至った経緯あり。Phase 2bはvive-auditorが数値・判定を
      再現の上「条件付き合格」（原因分析は未検証と明記する条件）。
+   - **【結果】【結論】の内容は、2026-07-16に実際にvive-interview→vive-check
+     ワークフローで再現実演済み**（`examples/water_phantom_pdd_ocr.yaml`、
+     [egs5_crosscheck/CONVERSATIONAL_WORKFLOW_DEMO.md](egs5_crosscheck/CONVERSATIONAL_WORKFLOW_DEMO.md)）。
+     単色ビーム(`source.spectrum`)・平行ビーム(`field.shape: parallel`)を
+     vivemonte本体の新機能として実装し、会話ワークフローで組んだ標準CLI計算が
+     PDD/OCR形状でEGS5と正規化差0.1〜0.2%pt程度で一致することを独立に確認した
+     （実演中にvive-auditorのステージB監査で`--dose-grid`のtrack-lengthタリーの
+     実在バグ——境界始点の位相同期による表面層−2.7%系統誤差——を発見、修正、
+     再監査で条件付き合格。教訓は[lessons_learned.md](../lessons_learned.md)）。
    PHITS比較は11月の本発表までの追加データとし、ライセンス申請は別途進める。
 2. UMIN登録フォームで別途必要な項目（本ドラフトには含まれない）:
    - 発表者・共同研究発表者の所属機関名・氏名・住所

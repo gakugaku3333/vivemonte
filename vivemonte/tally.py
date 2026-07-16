@@ -6,9 +6,10 @@
 track-length estimator（trackごとの飛程積分）で2種類の量を積算する:
   カーマ:    K += E * (μen/ρ) * ρ * dl                      [keV]
   H*(10):   H += (h*(10)/Φ)(E) * dl、後でボクセル体積で正規化   [pSv]
-どちらも区間内はエネルギー・材料とも一定なので積分自体に離散化誤差はないが、
-「その区間がどのボクセルに何cm分入っているか」の空間分配は
-サブステップ分割による近似（サブステップ長を細かくするほど厳密に収束）。
+どちらも区間内はエネルギー・材料とも一定なので積分自体に離散化誤差はない。
+「その区間がどのボクセルに何cm分入っているか」の空間分配は層化乱数点による
+モンテカルロ分配で、任意のサブステップ長で不偏（期待値＝厳密な重なり長。
+サブステップ長は分散にのみ影響する。accumulate_track_lengthのdocstring参照）。
 電子飛程を無視するカーマ近似のため、カーマ＝吸収線量とみなす
 （README/[[lessons_learned]]の設計判断と同じ割り切り）。
 """
@@ -75,13 +76,22 @@ class VoxelGrid:
 
 def accumulate_track_length(target: np.ndarray, grid: VoxelGrid, origin: np.ndarray,
                              direction: np.ndarray, length_cm: np.ndarray, weight_per_cm: np.ndarray,
+                             rng: np.random.Generator,
                              substep_cm: float | None = None, max_substeps: int = 40) -> None:
     """区間(origin, direction, length_cm)ごとに weight_per_cm * dl を target グリッドへ積算する。
 
     target は grid.shape と同じ形の任意の量（カーマ・H*(10)飛程積分など）で、
     weight_per_cm は区間内で一定（材料・エネルギーとも不変の前提）とする。
-    区間をサブステップに等分し、各サブステップの中点が属するボクセルへ
-    weight_per_cm * (length_cm/nsub) を加算する。
+    区間をサブステップに等分し、各サブステップ内の一様乱数点（層化サンプリング）が
+    属するボクセルへ weight_per_cm * (length_cm/nsub) を加算する。
+
+    乱数点を使う理由: 以前はサブステップの中点（決定的）を使っていたが、
+    区間の始点がボクセル境界ちょうどに揃う条件（例: parallel照射野で全光子が
+    ファントム前面から出発）では量子化誤差の位相が全区間で同期し、表面ボクセルで
+    約-3%の系統的過小評価になる（独立監査で発見）。層化乱数点なら任意のボクセルに
+    対して期待値が厳密な幾何学的重なり長に一致する（不偏推定量）。
+    rng は輸送用と別のストリームを渡すこと（タリーが輸送の乱数列を消費して
+    物理結果を変えないため — transport_photons が spawn で自動生成する）。
     """
     n = origin.shape[0]
     if n == 0:
@@ -92,7 +102,7 @@ def accumulate_track_length(target: np.ndarray, grid: VoxelGrid, origin: np.ndar
     max_n = int(nsub.max())
 
     j = np.arange(max_n)
-    frac = (j[None, :] + 0.5) / nsub[:, None]           # (n, max_n)
+    frac = (j[None, :] + rng.random((n, max_n))) / nsub[:, None]  # (n, max_n) 層化乱数点
     valid = j[None, :] < nsub[:, None]                   # (n, max_n)
 
     points = (origin[:, None, :] + direction[:, None, :]

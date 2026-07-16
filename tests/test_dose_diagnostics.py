@@ -98,20 +98,26 @@ def test_h10_max_voxel_in_real_scene_triggers_near_source_warning():
 
 
 def test_dose_max_voxel_on_water_slab_surface_triggers_background_warning():
-    """スラブ中心を狙った鉛筆ビームでも、最大吸収線量は表面直前の空気ボクセルに落ちる。
+    """スラブ中心を狙った鉛筆ビームで、最大吸収線量が表面直前の空気ボクセルに
+    落ちたとき警告が出ることの検証（解像度2cm）。
 
-    検証の過程で判明した点: これは粗い解像度に起因する離散化誤差ではなく、
-    解像度を細かくするほど値が増大する（2cm:1.4e-13, 1cm:1.5e-13,
-    0.5cm:6.4e-13, 0.2cm:3.5e-12 Gy/history、おおよそ1/解像度²で成長）
-    真の物理的発散に近い現象。材料境界での後方散乱によるkerma track-length
-    タリーの境界効果と考えられる（docs/lessons_learned.md参照）。
+    経緯: 当初この境界アーティファクトは解像度1cmでも常に空気側に出ていた
+    （2cm:1.4e-13, 1cm:1.5e-13, 0.5cm:6.4e-13, 0.2cm:3.5e-12 Gy/history と
+    細かいほど成長）。tally.pyのサブステップを中点（決定的）から層化乱数点に
+    変えた修正（表面ボクセル-2.7%の系統バイアス除去、監査で発見）以降は、
+    1cmでは最大値が物理的に正しい水の表面ボクセルへ移る（空気側1.212e-13 vs
+    水側1.246e-13の僅差、n=100k時点）ようになった。ただし解像度を細かくすると
+    最大値が成長する現象自体は残っている（0.5cm:4.8e-13。これは系統バイアスでは
+    なく、max_substepsクランプ由来の分散増大＋最大値の極値統計）ため、
+    警告機構の存在意義は変わらない。ここでは空気側が確実に最大になる
+    解像度2cmで警告発火を検証する。
     """
     src = {**_BASE_SOURCE, "position": [0, -20, 140], "field": {"size_cm": [2, 2], "sid_cm": 20}}
     scene = validate_scene({"source": src, "geometry": _SLAB_GEOMETRY})
     assert scene.ok
     geometry = Geometry(scene.raw["geometry"])
     result = run_transport(scene, n_histories=300_000, seed=4,
-                            dose_grid=True, grid_resolution_cm=1.0)
+                            dose_grid=True, grid_resolution_cm=2.0)
 
     dose_per_history = dose_map_Gy(result.grid, geometry) / result.n_histories
     pos = max_voxel_position_cm(result.grid, dose_per_history)
