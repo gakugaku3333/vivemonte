@@ -52,7 +52,7 @@ tools: Read, Glob, Grep, Bash
 - [ ] 評価したい位置（患者表面・操作者位置等）が**実在する物体上/近傍**か。
       「グリッド全体の最大値」で代用する計画になっていないか
       （空気ボクセルの非物理的max問題 — lessons_learned.md 参照）
-- [ ] `<シーン名>_requirements.md`（ヒアリング要件記録）が渡された場合:
+- [ ] `runs/<シーン名>/requirements.md`（ヒアリング要件記録）が渡された場合:
       scene.yamlの各値（kvp/mas/filtration/field/ジオメトリー・材質・
       評価点位置・heel_effectの向きなど）が要件記録と一致するか、項目ごとに
       照合する。これはscene.yaml単体を見ても検出できない不整合

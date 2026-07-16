@@ -15,9 +15,9 @@ description: viveMonteのシミュレーション成果物（scene.yaml・run結
 
 - 監査対象: scene.yaml のパス（必須）。加えてあれば run の出力ログ
   （テキストで渡す）、dose.npz のパス、ユーザーに出す予定の報告文案、
-  `<シーン名>_requirements.md`（vive-interviewが書き出したヒアリング要件記録）。
+  `runs/<シーン名>/requirements.md`（vive-interviewが書き出したヒアリング要件記録）。
 - 未指定なら、この会話で直近に扱ったシーン・結果を対象にする。
-  `<シーン名>_requirements.md` が存在するならステージAで必ず渡す
+  `runs/<シーン名>/requirements.md` が存在するならステージAで必ず渡す
   （scene.yamlの物理的な正しさだけでなく、ユーザーが実際に頼んだ内容との
   一致を監査官が検証できるのはこのファイルがある場合のみ）。
 
@@ -34,7 +34,7 @@ description: viveMonteのシミュレーション成果物（scene.yaml・run結
    冒頭で「まず `.claude/agents/vive-auditor.md` を読み、その人格と手順に
    完全に従うこと」と指示する）。依頼文には必ず含める:
    - リポジトリルートの絶対パスと、監査対象ファイルのパス
-   - `<シーン名>_requirements.md` があればそのパス（ステージAでは必須級。
+   - `runs/<シーン名>/requirements.md` があればそのパス（ステージAでは必須級。
      ないなら「要件記録なし」と明示し、ユーザー意図との一致検証が
      省略される旨を監査官に伝える）
    - run 出力ログの全文（コンソール出力はエージェントから見えないため）

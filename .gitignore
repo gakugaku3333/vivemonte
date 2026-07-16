@@ -6,6 +6,10 @@ __pycache__/
 xs*.png
 .DS_Store
 
+# vive-check/vive-interviewの成果物置き場（preview/trace/dose/maps/requirements）。
+# 残す価値のあるものはdocs/egs5_crosscheck/<name>/等へ意図的にコピーして追跡する。
+runs/
+
 # EGS5本体（KEK配布、Stanford/SLACライセンスの第三者コード）はリポジトリに含めない。
 # 自作の差分（docs/egs5_crosscheck/water60_free/, water60_bound/）とRESULTS.mdのみ追跡する。
 docs/egs5_crosscheck/egs5/
