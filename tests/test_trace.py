@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import numpy as np
 
-from vivemonte.geometry import Geometry
-from vivemonte.preview import write_html
-from vivemonte.scene import validate_scene
-from vivemonte.source import sample_source_photons
-from vivemonte.trajectory import TrajectoryRecorder, trajectories_to_json
-from vivemonte.transport import transport_photons
+from chatcarlo.geometry import Geometry
+from chatcarlo.preview import write_html
+from chatcarlo.scene import validate_scene
+from chatcarlo.source import sample_source_photons
+from chatcarlo.trajectory import TrajectoryRecorder, trajectories_to_json
+from chatcarlo.transport import transport_photons
 
 _BASE_SOURCE = {
     "kvp": 80, "position": [0, -50, 0], "direction": [0, 1, 0],

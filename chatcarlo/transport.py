@@ -6,11 +6,11 @@
 Woodcock delta-trackingの仮想衝突は不要（空気の広い空間で無駄がない）。
 
 周辺の責務は分離してある:
-- スペクトル生成（SpekPy/Kramers・ヒール軸外スペクトル）: vivemonte/spectrum.py
-- 線源サンプリング・mAs光子数校正: vivemonte/source.py
-- 相互作用の角度・エネルギー抽選（KN/レイリー）: vivemonte/physics.py
-- 軌跡記録（trace用）: vivemonte/trajectory.py
-- 線量マップ換算・非物理的最大値の警告: vivemonte/diagnostics.py
+- スペクトル生成（SpekPy/Kramers・ヒール軸外スペクトル）: chatcarlo/spectrum.py
+- 線源サンプリング・mAs光子数校正: chatcarlo/source.py
+- 相互作用の角度・エネルギー抽選（KN/レイリー）: chatcarlo/physics.py
+- 軌跡記録（trace用）: chatcarlo/trajectory.py
+- 線量マップ換算・非物理的最大値の警告: chatcarlo/diagnostics.py
 """
 from __future__ import annotations
 
@@ -80,7 +80,7 @@ def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
 
     pos/dirv/energy は呼び出し側の配列を破壊的に更新する。
     grid を渡すと、各飛行区間ごとにカーマのtrack-length estimatorを
-    ボクセルグリッドへ積算する（vivemonte/tally.py参照）。タリーの層化
+    ボクセルグリッドへ積算する（chatcarlo/tally.py参照）。タリーの層化
     サンプリングにはtally_rng（未指定ならrngからspawnで決定的に導出）を使う。
     spawnは輸送の乱数列を消費しないため、grid有無で輸送結果（吸収/脱出・
     相互作用サンプリング）は同一seedならビット一致のまま変わらない。

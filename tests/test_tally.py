@@ -12,10 +12,10 @@ from __future__ import annotations
 
 import numpy as np
 
-from vivemonte.dose_coefficients import h_star_10_per_fluence
-from vivemonte.geometry import Geometry
-from vivemonte.tally import VoxelGrid, accumulate_track_length
-from vivemonte.transport import transport_photons
+from chatcarlo.dose_coefficients import h_star_10_per_fluence
+from chatcarlo.geometry import Geometry
+from chatcarlo.tally import VoxelGrid, accumulate_track_length
+from chatcarlo.transport import transport_photons
 
 
 def test_accumulate_exact_energy_conservation():
@@ -139,8 +139,8 @@ def test_boundary_start_surface_voxel_unbiased():
 
 def test_run_transport_dose_grid_h10_finite_and_nonnegative():
     """実シーンでの統合テスト: H*(10)グリッドがクラッシュせず有限・非負の値を返す。"""
-    from vivemonte.scene import validate_scene
-    from vivemonte.transport import run_transport
+    from chatcarlo.scene import validate_scene
+    from chatcarlo.transport import run_transport
 
     raw = {
         "source": {"kvp": 100, "position": [0, -50, 0], "direction": [0, 1, 0],

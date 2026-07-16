@@ -1,6 +1,6 @@
 """ボクセル吸収線量・周辺線量当量タリー — 輸送ジオメトリーとは独立なグリッド。
 
-輸送は解析面トラッキング（vivemonte/geometry.py, vivemonte/transport.py）
+輸送は解析面トラッキング（chatcarlo/geometry.py, chatcarlo/transport.py）
 で行い、スコアリングだけをこのモジュールの一様グリッドに刻む。
 
 track-length estimator（trackごとの飛程積分）で2種類の量を積算する:

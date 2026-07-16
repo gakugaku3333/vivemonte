@@ -7,7 +7,7 @@
 import numpy as np
 import pytest
 
-from vivemonte.materials import linear_mu, mu_en_rho, mu_rho
+from chatcarlo.materials import linear_mu, mu_en_rho, mu_rho
 
 # (材料, keV, NIST μ/ρ, NIST μen/ρ) — テーブルのグリッド点なので厳密一致を要求
 NIST_REFERENCE = [

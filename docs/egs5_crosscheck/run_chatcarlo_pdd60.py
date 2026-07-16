@@ -1,7 +1,7 @@
-"""viveMonte側の相互検証実行スクリプト（Phase 2b: 水ファントム深部線量分布PDD
+"""ChatCarlo側の相互検証実行スクリプト（Phase 2b: 水ファントム深部線量分布PDD
 ＋2深さの側方プロファイル、60 keV単色）。
 
-Phase 2a（BSF、docs/egs5_crosscheck/run_vivemonte_bsf60.py）と同一の手法
+Phase 2a（BSF、docs/egs5_crosscheck/run_chatcarlo_bsf60.py）と同一の手法
 （TrajectoryRecorderの生の飛行区間から、スコア領域との解析的な厳密重なり長を
 計算するtrack-length kerma推定量）を、単一の薄層ではなく複数の深さ・側方ビンに
 拡張したもの。
@@ -28,10 +28,10 @@ import json
 
 import numpy as np
 
-from vivemonte.geometry import Geometry
-from vivemonte.materials import density, mu_en_rho
-from vivemonte.transport import transport_photons
-from vivemonte.trajectory import TrajectoryRecorder
+from chatcarlo.geometry import Geometry
+from chatcarlo.materials import density, mu_en_rho
+from chatcarlo.transport import transport_photons
+from chatcarlo.trajectory import TrajectoryRecorder
 
 ENERGY_KEV = 60.0
 FIELD_HALF_CM = 5.0          # 10x10 cm^2 照射野（平行ビーム近似）
@@ -50,7 +50,7 @@ def _segment_box_overlap_cm(starts: np.ndarray, ends: np.ndarray,
                              lo: np.ndarray, hi: np.ndarray) -> np.ndarray:
     """線分(starts[i]->ends[i])と軸並行直方体[lo,hi]の厳密な重なり長[cm]。
 
-    docs/egs5_crosscheck/run_vivemonte_bsf60.py と同一実装（vive-auditor監査済み）。
+    docs/egs5_crosscheck/run_chatcarlo_bsf60.py と同一実装（vive-auditor監査済み）。
     """
     d = ends - starts
     length = np.linalg.norm(d, axis=1)
@@ -156,7 +156,7 @@ def main() -> None:
         print(f"[{name}] {mean_gy:.6e} +- {sem_gy:.6e} Gy/history "
               f"(相対{100*rel_err:.3f}%)")
 
-    out_path = "docs/egs5_crosscheck/vivemonte_pdd60_results.json"
+    out_path = "docs/egs5_crosscheck/chatcarlo_pdd60_results.json"
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
     print(f"\n結果を {out_path} に保存しました。")

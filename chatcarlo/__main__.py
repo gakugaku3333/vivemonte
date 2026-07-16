@@ -1,10 +1,10 @@
 """CLI — AI（Claude Code）が非対話で叩ける入口。
 
-  python -m vivemonte validate <scene.yaml>
-  python -m vivemonte preview  <scene.yaml> [-o out.html]
-  python -m vivemonte trace    <scene.yaml> [-n 200] [--seed 42] [-o out.html]
-  python -m vivemonte plot     <dose.npz> [--scene scene.yaml] [--quantity dose|h10] [-o out.png]
-  python -m vivemonte xs <材料...> [--emin 10] [--emax 150] [-o out.png]
+  python -m chatcarlo validate <scene.yaml>
+  python -m chatcarlo preview  <scene.yaml> [-o out.html]
+  python -m chatcarlo trace    <scene.yaml> [-n 200] [--seed 42] [-o out.html]
+  python -m chatcarlo plot     <dose.npz> [--scene scene.yaml] [--quantity dose|h10] [-o out.png]
+  python -m chatcarlo xs <材料...> [--emin 10] [--emax 150] [-o out.png]
 """
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ def cmd_preview(args) -> int:
     for w in scene.warnings:
         print(f"[警告] {w}")
     out = args.out or args.scene.rsplit(".", 1)[0] + "_preview.html"
-    write_html(scene, out, title=args.title or f"viveMonte — {args.scene}")
+    write_html(scene, out, title=args.title or f"ChatCarlo — {args.scene}")
     print(f"プレビューを書き出しました: {out}")
     return 0
 
@@ -76,7 +76,7 @@ def cmd_trace(args) -> int:
     trajectories = trajectories_to_json(recorder)
 
     out = args.out or args.scene.rsplit(".", 1)[0] + "_trace.html"
-    write_html(scene, out, title=args.title or f"viveMonte trace — {args.scene}",
+    write_html(scene, out, title=args.title or f"ChatCarlo trace — {args.scene}",
                trajectories=trajectories)
     print(f"光子{n}個の軌跡を書き出しました: {out}")
     return 0
@@ -208,7 +208,7 @@ def cmd_xs(args) -> int:
         ax.set_xlabel("Photon energy [keV]")
         ax.grid(True, which="both", alpha=0.3)
         ax.legend(fontsize=8)
-    fig.suptitle("viveMonte cross-section data (xraylib / EPDL, NIST-consistent)")
+    fig.suptitle("ChatCarlo cross-section data (xraylib / EPDL, NIST-consistent)")
     fig.tight_layout()
     out = args.out or "xs.png"
     fig.savefig(out, dpi=140)
@@ -217,7 +217,7 @@ def cmd_xs(args) -> int:
 
 
 def main() -> int:
-    p = argparse.ArgumentParser(prog="vivemonte")
+    p = argparse.ArgumentParser(prog="chatcarlo")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     pv = sub.add_parser("validate", help="scene.yaml を検証")

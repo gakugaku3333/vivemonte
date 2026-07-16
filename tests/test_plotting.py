@@ -1,9 +1,9 @@
-"""線量マップ断面図（vivemonte/plotting.py）のテスト。"""
+"""線量マップ断面図（chatcarlo/plotting.py）のテスト。"""
 from __future__ import annotations
 
 import numpy as np
 
-from vivemonte.plotting import extent_cm, max_voxel_index, plot_dose_npz
+from chatcarlo.plotting import extent_cm, max_voxel_index, plot_dose_npz
 
 
 def _write_npz(path, dose, origin_cm=(0.0, 0.0, 0.0), voxel_size_cm=1.0):

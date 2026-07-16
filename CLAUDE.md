@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-viveMonte is a Monte Carlo photon transport code for diagnostic X-ray energies (10–150 keV). Scenes are declared
+ChatCarlo is a Monte Carlo photon transport code for diagnostic X-ray energies (10–150 keV). Scenes are declared
 in `scene.yaml` — the system is designed for an AI (Claude Code) to write and iterate on scene files declaratively,
 then drive validation/preview/run non-interactively via the CLI. Current status is research/education only: doses
 and H*(10) must be cross-checked against an established code (PHITS) before being used for real patient-dose or
@@ -25,26 +25,26 @@ python3 -m venv .venv
 .venv/bin/pip install numpy pyyaml matplotlib xraylib pytest spekpy
 
 # validate a scene (physical sanity checks, not just schema)
-.venv/bin/python -m vivemonte validate examples/chest_room.yaml
+.venv/bin/python -m chatcarlo validate examples/chest_room.yaml
 
 # 3D geometry preview -> self-contained HTML (no external deps)
-.venv/bin/python -m vivemonte preview examples/chest_room.yaml -o preview.html
+.venv/bin/python -m chatcarlo preview examples/chest_room.yaml -o preview.html
 
 # cross-section curves
-.venv/bin/python -m vivemonte xs water bone lead -o xs.png
+.venv/bin/python -m chatcarlo xs water bone lead -o xs.png
 
 # run transport (prints per-material absorbed energy, absorbed/escaped fractions)
-.venv/bin/python -m vivemonte run examples/chest_room.yaml -n 1e6 --seed 42
+.venv/bin/python -m chatcarlo run examples/chest_room.yaml -n 1e6 --seed 42
 
 # same, plus voxel absorbed-dose/H*(10) tally written to .npz
-.venv/bin/python -m vivemonte run examples/chest_room.yaml -n 1e6 --seed 42 \
+.venv/bin/python -m chatcarlo run examples/chest_room.yaml -n 1e6 --seed 42 \
     --dose-grid --resolution 5 --dose-out dose.npz
 
 # photon trajectory 3D visualization (small n; overlays onto the preview HTML template)
-.venv/bin/python -m vivemonte trace examples/chest_room.yaml -n 200 --seed 42 -o trace.html
+.venv/bin/python -m chatcarlo trace examples/chest_room.yaml -n 200 --seed 42 -o trace.html
 
 # cross-section slices through a dose/H*(10) map (default: 3 planes through the max-value voxel)
-.venv/bin/python -m vivemonte plot dose.npz --scene examples/chest_room.yaml -o maps.png
+.venv/bin/python -m chatcarlo plot dose.npz --scene examples/chest_room.yaml -o maps.png
 
 # tests (spot-checked against published NIST reference values)
 .venv/bin/python -m pytest tests/ -q
@@ -64,19 +64,19 @@ ambiguities before drafting scene.yaml, then hands off to vive-check.
 ## Architecture
 
 **Transport is not voxelized.** Geometry stays as analytic primitives (box/cylinder/sphere in
-[geometry.py](vivemonte/geometry.py)); each photon steps to the next material boundary by computing an analytic
-ray/primitive intersection distance ([transport.py](vivemonte/transport.py)). This is "analytic surface tracking,"
+[geometry.py](chatcarlo/geometry.py)); each photon steps to the next material boundary by computing an analytic
+ray/primitive intersection distance ([transport.py](chatcarlo/transport.py)). This is "analytic surface tracking,"
 not Woodcock delta-tracking — since each segment has one homogeneous material, μ is constant along a step, so no
 virtual-collision rejection is needed. This scales well for room-size scenes with thin shielding without a
 voxel-resolution/memory tradeoff. Overlapping objects resolve by list order (later wins); open space not inside
 any object is `background` (default air).
 
-**Module layout around the kernel**: [transport.py](vivemonte/transport.py) is only the transport loop +
+**Module layout around the kernel**: [transport.py](chatcarlo/transport.py) is only the transport loop +
 `run_transport`. Spectrum generation (SpekPy/Kramers, heel off-axis spectra) lives in
-[spectrum.py](vivemonte/spectrum.py); source/field sampling and the mAs photon-count calibration in
-[source.py](vivemonte/source.py); interaction angle/energy sampling in [physics.py](vivemonte/physics.py);
-trajectory recording for `trace` in [trajectory.py](vivemonte/trajectory.py); dose-map conversion and the
-non-physical-max warnings in [diagnostics.py](vivemonte/diagnostics.py).
+[spectrum.py](chatcarlo/spectrum.py); source/field sampling and the mAs photon-count calibration in
+[source.py](chatcarlo/source.py); interaction angle/energy sampling in [physics.py](chatcarlo/physics.py);
+trajectory recording for `trace` in [trajectory.py](chatcarlo/trajectory.py); dose-map conversion and the
+non-physical-max warnings in [diagnostics.py](chatcarlo/diagnostics.py).
 
 **Physics**: photoelectric / Compton (Klein-Nishina with Kahn rejection sampling) / Rayleigh (atomic form factor
 F(Z,q) via `xraylib.FF_Rayl`, compounds sampled by mass-fraction-weighted element pick before the angular
@@ -84,7 +84,7 @@ distribution). Electron range is neglected (kerma approximation — local absorp
 [tests/test_transport.py](tests/test_transport.py) checks primary transmission against the analytic Beer-Lambert
 law (`exp(-μt)`).
 
-**Dose/H*(10) tallying is a separate concern from transport.** [tally.py](vivemonte/tally.py)'s `VoxelGrid` lays a
+**Dose/H*(10) tallying is a separate concern from transport.** [tally.py](chatcarlo/tally.py)'s `VoxelGrid` lays a
 uniform grid independently of the transport geometry, purely for scoring. Two independent estimators are
 cross-validated against each other in [tests/test_tally.py](tests/test_tally.py): a collision estimator
 (`energy_deposited`, scored at interaction points) and a track-length kerma estimator (path-integral over the
@@ -104,8 +104,8 @@ mAs double-division bug writeup in [docs/lessons_learned.md](docs/lessons_learne
 | quantity | source | used for |
 |---|---|---|
 | μ/ρ, photoelectric/Compton/Rayleigh split | `xraylib` (EPDL-based, matches NIST XCOM) | transport free-path/interaction sampling |
-| μen/ρ (mass energy-absorption coefficient) | NIST XAAMDI, bundled CSV (`vivemonte/data/nist_xaamdi/`) | kerma/absorbed-dose tally |
-| h*(10)/Φ (ambient dose equivalent conversion) | ICRP Publication 74 / ICRU Report 57, bundled CSV (`vivemonte/data/h_star_10/`) | H*(10) tally |
+| μen/ρ (mass energy-absorption coefficient) | NIST XAAMDI, bundled CSV (`chatcarlo/data/nist_xaamdi/`) | kerma/absorbed-dose tally |
+| h*(10)/Φ (ambient dose equivalent conversion) | ICRP Publication 74 / ICRU Report 57, bundled CSV (`chatcarlo/data/h_star_10/`) | H*(10) tally |
 
 `xraylib`'s `CS_Energy` diverges from NIST-published μen/ρ by up to ~17% and must not be used for dose — this is
 covered by a regression test in `tests/test_materials.py`. Re-fetch data with `scripts/fetch_nist_xaamdi.py` /
@@ -113,7 +113,7 @@ covered by a regression test in `tests/test_materials.py`. Re-fetch data with `s
 
 ## Known sharp edges (read before trusting "max dose"/"max H*(10)" output)
 
-`vivemonte run --dose-grid`'s reported max absorbed dose / max H*(10) can still land in a non-physical spot: a
+`chatcarlo run --dose-grid`'s reported max absorbed dose / max H*(10) can still land in a non-physical spot: a
 background (air) voxel near the 1/r² point-source singularity, or an air voxel just outside a material boundary
 due to backscatter. The CLI detects and prints a `[警告]` when this happens
 (`background_medium_warning`/`near_source_air_warning` in diagnostics.py). For a real exposure-point estimate (patient
@@ -131,7 +131,7 @@ the same caution. Full writeup: [docs/lessons_learned.md](docs/lessons_learned.m
 
 ## Scene files
 
-`scene.yaml`: cm units, z-axis up, floor at z=0. See [vivemonte/scene.py](vivemonte/scene.py) for the validator
+`scene.yaml`: cm units, z-axis up, floor at z=0. See [chatcarlo/scene.py](chatcarlo/scene.py) for the validator
 (`load_scene`/`validate_scene`) — it's designed to produce actionable errors (`geometry[2].size_cm: ...`) for an AI
 self-correction loop, plus non-fatal physics-sanity warnings (e.g. filtration below legal minimum, source position
 inside a solid). [examples/chest_room.yaml](examples/chest_room.yaml) is the canonical worked example (standing

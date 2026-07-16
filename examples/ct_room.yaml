@@ -2,7 +2,7 @@
 # 座標系: cm、z軸が鉛直上向き、床上面が z=0
 #
 # ⚠️ 近似の注意: ガントリー回転は source.rotation で光子ごとの角度抽選
-# （連続一様）として表現する（実装: vivemonte/transport.py の
+# （連続一様）として表現する（実装: chatcarlo/transport.py の
 # sample_source_photons）。rotation.scan_length_cm を指定するとヘリカル撮影の
 # 「位相平均近似」になる: 螺旋の開始位相が体に対してランダムであることを
 # 位相平均すると回転角とテーブル位置は厳密に独立になるため、角度とテーブル

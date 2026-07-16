@@ -4,7 +4,7 @@
 「vive-interviewの会話ヒアリングでシーンを確定し、vive-checkの関門つき
 ワークフローで計算する」——を、Phase 2b（[PDD_RESULTS.md](PDD_RESULTS.md)）の
 水ファントムPDD/OCRで実際になぞった記録。目的は「会話だけで組んだ標準CLI
-ワークフロー（`scene.yaml` + `vivemonte run --dose-grid`）が、専用スクリプトで
+ワークフロー（`scene.yaml` + `chatcarlo run --dose-grid`）が、専用スクリプトで
 既に監査済みのEGS5相互検証結果と同じ結論（形状一致）に行き着けるか」の実演。
 
 ## シーン
@@ -12,7 +12,7 @@
 [../../examples/water_phantom_pdd_ocr.yaml](../../examples/water_phantom_pdd_ocr.yaml)。
 Phase 2bと同条件（60 keV単色、10×10cm²、水ファントム30×20×30cm）だが、
 Phase 2bの専用スクリプトが独自実装していた「平行ビーム近似」を、今回はscene.yaml
-から直接指定できるよう`vivemonte`本体に新機能として実装した:
+から直接指定できるよう`chatcarlo`本体に新機能として実装した:
 
 - `source.spectrum: [{energy_keV: 60.0, weight: 1.0}]` — 単色ビーム
   （`source.kvp`の代替。両者は併用不可）
@@ -21,8 +21,8 @@ Phase 2bの専用スクリプトが独自実装していた「平行ビーム近
 
 両機能とも`mas`/`heel_effect`/`ctdi_vol_mGy`との併用は検証時にエラーになる
 （それらはkvpベースのSpekPy計算に固定されており、上書きした条件と食い違うため）。
-実装は[vivemonte/scene.py](../../vivemonte/scene.py)・
-[vivemonte/source.py](../../vivemonte/source.py)、テストは
+実装は[chatcarlo/scene.py](../../chatcarlo/scene.py)・
+[chatcarlo/source.py](../../chatcarlo/source.py)、テストは
 [tests/test_scene.py](../../tests/test_scene.py)・
 [tests/test_parallel_beam.py](../../tests/test_parallel_beam.py)。
 
@@ -55,7 +55,7 @@ Phase 2bの専用スクリプトが独自実装していた「平行ビーム近
 
 コマンド:
 ```
-.venv/bin/python -m vivemonte run examples/water_phantom_pdd_ocr.yaml \
+.venv/bin/python -m chatcarlo run examples/water_phantom_pdd_ocr.yaml \
     -n 3000000 --seed 42 --dose-grid --resolution 1 \
     --dose-out water_phantom_pdd_ocr_dose.npz
 ```
@@ -69,7 +69,7 @@ EGS5と比較（[water_phantom_pdd_ocr_vs_egs5.png](water_phantom_pdd_ocr_vs_egs
 
 | 比較 | 内容 |
 |---|---|
-| 会話WF(CLI) vs Phase 2b専用スクリプト（viveMonte内部の2独立実装） | PDD平均差 −0.16%、最大差1.93%（統計誤差内） |
+| 会話WF(CLI) vs Phase 2b専用スクリプト（ChatCarlo内部の2独立実装） | PDD平均差 −0.16%、最大差1.93%（統計誤差内） |
 | 会話WF(CLI) vs EGS5、絶対値 | 平均 −1.60%（Phase 2bの既知の約−1.7%系統差を同水準で再現、未解明のまま） |
 | 会話WF(CLI) vs EGS5、**形状**（各コード自身の基準ボクセルで正規化） | PDD平均+0.10%pt・最大0.44%pt／OCR表面平均+0.07%pt・最大1.25%pt／OCR 10cm平均+0.23%pt・最大1.19%pt |
 

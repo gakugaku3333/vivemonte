@@ -4,8 +4,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from vivemonte.scene import field_corners, validate_scene
-from vivemonte.source import sample_source_photons
+from chatcarlo.scene import field_corners, validate_scene
+from chatcarlo.source import sample_source_photons
 
 _PAR_SRC = {
     "spectrum": [{"energy_keV": 60.0, "weight": 1.0}],

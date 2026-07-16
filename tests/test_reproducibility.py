@@ -13,13 +13,13 @@ import sys
 
 import numpy as np
 
-from vivemonte.materials import material_groups
+from chatcarlo.materials import material_groups
 
 _SCRIPT = """
 import numpy as np
-from vivemonte.geometry import Geometry
-from vivemonte.source import sample_source_photons
-from vivemonte.transport import transport_photons
+from chatcarlo.geometry import Geometry
+from chatcarlo.source import sample_source_photons
+from chatcarlo.transport import transport_photons
 
 src = {"kvp": 80, "position": [0, -30, 0], "direction": [0, 1, 0],
        "field": {"size_cm": [10, 10], "sid_cm": 30}}

@@ -1,5 +1,5 @@
 """NIST XAAMDI（X-Ray Mass Attenuation Coefficients, Hubbell & Seltzer）を取得し
-vivemonte/data/nist_xaamdi/*.csv として同梱する。
+chatcarlo/data/nist_xaamdi/*.csv として同梱する。
 
 μen/ρ（質量エネルギー吸収係数）の一次ソース。カーマ・吸収線量タリーに使用。
 xraylib の CS_Energy は本テーブルと最大約17%乖離することを確認済みのため、
@@ -16,7 +16,7 @@ import urllib.request
 from pathlib import Path
 
 BASE = "https://physics.nist.gov/PhysRefData/XrayMassCoef"
-OUT = Path(__file__).resolve().parent.parent / "vivemonte" / "data" / "nist_xaamdi"
+OUT = Path(__file__).resolve().parent.parent / "chatcarlo" / "data" / "nist_xaamdi"
 
 # 短縮名 → (URL片, 説明)
 TARGETS = {
@@ -50,7 +50,7 @@ ROW_RE = re.compile(
 
 def fetch_one(name: str, url_part: str, desc: str) -> int:
     url = f"{BASE}/{url_part}"
-    req = urllib.request.Request(url, headers={"User-Agent": "viveMonte-data-fetch/0.1"})
+    req = urllib.request.Request(url, headers={"User-Agent": "ChatCarlo-data-fetch/0.1"})
     with urllib.request.urlopen(req, timeout=30) as r:
         html = r.read().decode("ascii", errors="replace")
     rows = ROW_RE.findall(html)

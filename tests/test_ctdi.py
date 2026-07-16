@@ -1,4 +1,4 @@
-"""CTDIvol校正（vivemonte/ctdi.py）の検証。
+"""CTDIvol校正（chatcarlo/ctdi.py）の検証。
 
 物理サニティ（head>body、周辺>中心）と、mAs+SpekPyフルエンスという
 独立な絶対校正経路との桁の相互突き合わせを行う。
@@ -11,8 +11,8 @@ import functools
 import numpy as np
 import pytest
 
-from vivemonte.ctdi import ctdi_per_history_Gy, effective_histories_from_ctdi
-from vivemonte.scene import validate_scene
+from chatcarlo.ctdi import ctdi_per_history_Gy, effective_histories_from_ctdi
+from chatcarlo.scene import validate_scene
 
 _SRC = {
     "kvp": 120.0,
@@ -68,7 +68,7 @@ def test_ctdi_order_of_magnitude_against_spekpy_mas_path():
     0.5〜50 mGyの帯を外れたら桁バグを疑う。
     """
     pytest.importorskip("spekpy")
-    from vivemonte.source import photon_count_through_field
+    from chatcarlo.source import photon_count_through_field
 
     ctdiw_per_history, _, _ = _ctdi("body")
     n_photons = photon_count_through_field({**_SRC, "mas": 300.0})

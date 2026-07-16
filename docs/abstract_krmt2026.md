@@ -22,7 +22,7 @@
 （「話しかける」「対話」「会話」は音声インタラクションと混同されうるため「チャット」に統一。
 「物理的妥当性」の表現は、EGS5という実測検証済みの確立コードとの相互検証を根拠にした慣用的な表現であり
 問題ないと判断し現状維持——検討の経緯は本ファイル末尾を参照。
-%値はEGS5・viveMonteそれぞれ自身の基準ボクセルで正規化した形状の差分。詳細は
+%値はEGS5・ChatCarloそれぞれ自身の基準ボクセルで正規化した形状の差分。詳細は
 [egs5_crosscheck/CONVERSATIONAL_WORKFLOW_DEMO.md](egs5_crosscheck/CONVERSATIONAL_WORKFLOW_DEMO.md)・
 [egs5_crosscheck/PDD_RESULTS.md](egs5_crosscheck/PDD_RESULTS.md)を参照。なお正規化前の絶対値スケールには
 未解明の約1.7%の系統差があり、抄録では字数制約上「形状の一致」のみを記載——詳細は次項）
@@ -64,7 +64,7 @@
    PHITSは国内でもライセンス申請から配布まで約3週間かかり締切に間に合わないため、
    即日入手可能な確立コードEGS5（KEK配布）との比較に切り替えた。
    - **Phase 1（一次透過率、当初の結論文で採用）**: 60 keV鉛筆ビーム＋水スラブ10cm、
-     束縛コンプトン断面積（IBOUND=1）を揃えた条件でviveMonte 12.589% vs
+     束縛コンプトン断面積（IBOUND=1）を揃えた条件でChatCarlo 12.589% vs
      EGS5 12.70%（相対0.88%、約1.7σ）、事前基準「2σかつ2%以内」に適合。
      詳細は[egs5_crosscheck/RESULTS.md](egs5_crosscheck/RESULTS.md)。
    - **Phase 2b（水ファントムPDD・側方プロファイルOCR、現在の結論文で採用）**:
@@ -84,7 +84,7 @@
      ワークフローで再現実演済み**（`examples/water_phantom_pdd_ocr.yaml`、
      [egs5_crosscheck/CONVERSATIONAL_WORKFLOW_DEMO.md](egs5_crosscheck/CONVERSATIONAL_WORKFLOW_DEMO.md)）。
      単色ビーム(`source.spectrum`)・平行ビーム(`field.shape: parallel`)を
-     vivemonte本体の新機能として実装し、会話ワークフローで組んだ標準CLI計算が
+     chatcarlo本体の新機能として実装し、会話ワークフローで組んだ標準CLI計算が
      PDD/OCR形状でEGS5と正規化差0.1〜0.2%pt程度で一致することを独立に確認した
      （実演中にvive-auditorのステージB監査で`--dose-grid`のtrack-lengthタリーの
      実在バグ——境界始点の位相同期による表面層−2.7%系統誤差——を発見、修正、

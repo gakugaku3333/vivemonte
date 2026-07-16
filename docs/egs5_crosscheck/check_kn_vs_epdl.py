@@ -44,7 +44,7 @@ def main() -> None:
 
     total_epdl = cs_compt + cs_rayl + cs_photo
     total_kn = mu_rho_kn + cs_rayl + cs_photo
-    for rho, label in [(1.0, "rho=1.000 (viveMonte)"), (1.001, "rho=1.001 (PEGS5テンプレート)")]:
+    for rho, label in [(1.0, "rho=1.000 (ChatCarlo)"), (1.001, "rho=1.001 (PEGS5テンプレート)")]:
         t_epdl = math.exp(-total_epdl * rho * THICKNESS_CM)
         t_kn = math.exp(-total_kn * rho * THICKNESS_CM)
         print(f"{label}: T(EPDLコンプトン)={t_epdl * 100:.3f}%  T(KNコンプトン)={t_kn * 100:.3f}%")

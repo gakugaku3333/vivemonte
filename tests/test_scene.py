@@ -1,7 +1,7 @@
 """scene.yamlバリデーション — source.spectrum（陽なスペクトル指定、単色ビーム等）関連。"""
 import pytest
 
-from vivemonte.scene import validate_scene
+from chatcarlo.scene import validate_scene
 
 _BASE = {
     "geometry": [

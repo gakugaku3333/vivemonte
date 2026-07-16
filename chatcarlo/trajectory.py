@@ -1,6 +1,6 @@
-"""光子軌跡の記録と可視化用データ整形（`vivemonte trace` の裏方）。
+"""光子軌跡の記録と可視化用データ整形（`chatcarlo trace` の裏方）。
 
-輸送カーネル（vivemonte/transport.py）に TrajectoryRecorder を渡すと、
+輸送カーネル（chatcarlo/transport.py）に TrajectoryRecorder を渡すと、
 ループ1周ごとの飛行区間が記録される。乱数を一切消費しないため、
 recorderの有無は同一seedでの輸送結果に影響しない。
 """

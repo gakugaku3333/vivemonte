@@ -1,4 +1,4 @@
-"""viveMonte側の相互検証実行スクリプト（Phase 2a: 後方散乱係数BSF、60 keV単色）。
+"""ChatCarlo側の相互検証実行スクリプト（Phase 2a: 後方散乱係数BSF、60 keV単色）。
 
 EGS5側（docs/egs5_crosscheck/bsf60_free/, bsf60_phantom/、詳細は
 docs/egs5_crosscheck/bsf60_NOTES.md）と同一幾何・物理条件でBSFを計算する:
@@ -10,12 +10,12 @@ docs/egs5_crosscheck/bsf60_NOTES.md）と同一幾何・物理条件でBSFを計
 - BSF = 表面層カーマ ÷ 自由空気カーマ
 
 実行:
-    PYTHONPATH=. .venv/bin/python docs/egs5_crosscheck/run_vivemonte_bsf60.py
+    PYTHONPATH=. .venv/bin/python docs/egs5_crosscheck/run_chatcarlo_bsf60.py
 
 ## なぜ既定の --dose-grid（VoxelGrid）を使わないか
 
 VoxelGrid.accumulate_track_length は飛行区間をサブステップ分割して積算するが、
-分割数は `substep_cm` あたり最大40分割に打ち切られる（vivemonte/tally.py）。
+分割数は `substep_cm` あたり最大40分割に打ち切られる（chatcarlo/tally.py）。
 今回のスコア層は厚さ0.2cmしかないのに対し、水60 keVの平均自由行程は約5cmで、
 1回目の飛行区間の多くはその何倍も長い。長い区間を高々40分割すると、0.2cm厚の
 層に落ちる分割点がわずか1〜2個になり、真の重なり長（連続値）が粗い整数個の
@@ -38,10 +38,10 @@ from __future__ import annotations
 
 import numpy as np
 
-from vivemonte.geometry import Geometry
-from vivemonte.materials import density, mu_en_rho
-from vivemonte.transport import transport_photons
-from vivemonte.trajectory import TrajectoryRecorder
+from chatcarlo.geometry import Geometry
+from chatcarlo.materials import density, mu_en_rho
+from chatcarlo.transport import transport_photons
+from chatcarlo.trajectory import TrajectoryRecorder
 
 ENERGY_KEV = 60.0
 FIELD_HALF_CM = 5.0          # 10x10 cm^2 照射野（平行ビーム近似）
@@ -171,7 +171,7 @@ def main() -> None:
     bsf_err = bsf * bsf_rel_err
 
     print()
-    print(f"BSF (viveMonte) = {bsf:.4f} ± {bsf_err:.4f}  (1sigma, 相対{100*bsf_rel_err:.3f}%)")
+    print(f"BSF (ChatCarlo) = {bsf:.4f} ± {bsf_err:.4f}  (1sigma, 相対{100*bsf_rel_err:.3f}%)")
     print()
     print("EGS5側 (docs/egs5_crosscheck/bsf60_NOTES.md, IBOUND=1, n=500,000/run):")
     print("  BSF (EGS5) = 1.4529 ± 0.0243  (1sigma, 相対1.670%)")

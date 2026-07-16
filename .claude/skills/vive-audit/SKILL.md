@@ -1,6 +1,6 @@
 ---
 name: vive-audit
-description: viveMonteのシミュレーション成果物（scene.yaml・run結果・報告文）を独立監査官エージェント（vive-auditor）にチェックさせる。「監査して」「ミスがないか確認して」「レビューして」などで起動。vive-checkの各関門でユーザー承認の前に自動で挟むこともできる。
+description: ChatCarloのシミュレーション成果物（scene.yaml・run結果・報告文）を独立監査官エージェント（vive-auditor）にチェックさせる。「監査して」「ミスがないか確認して」「レビューして」などで起動。vive-checkの各関門でユーザー承認の前に自動で挟むこともできる。
 ---
 
 # vive-audit — 独立監査の依頼

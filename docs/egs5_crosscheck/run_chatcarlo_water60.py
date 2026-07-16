@@ -1,9 +1,9 @@
-"""viveMonte側の相互検証実行スクリプト（60 keV鉛筆ビーム＋水スラブ10cm）。
+"""ChatCarlo側の相互検証実行スクリプト（60 keV鉛筆ビーム＋水スラブ10cm）。
 
-EGS5（run_water60 / run_water60_bound）と同一条件でviveMonteの一次透過率を計算する。
+EGS5（run_water60 / run_water60_bound）と同一条件でChatCarloの一次透過率を計算する。
 RESULTS.mdに記載した数値の再現用。実行:
 
-    PYTHONPATH=. .venv/bin/python docs/egs5_crosscheck/run_vivemonte_water60.py
+    PYTHONPATH=. .venv/bin/python docs/egs5_crosscheck/run_chatcarlo_water60.py
 """
 from __future__ import annotations
 
@@ -11,9 +11,9 @@ import math
 
 import numpy as np
 
-from vivemonte.geometry import Geometry
-from vivemonte.materials import linear_mu
-from vivemonte.transport import transport_photons
+from chatcarlo.geometry import Geometry
+from chatcarlo.materials import linear_mu
+from chatcarlo.transport import transport_photons
 
 MATERIAL, THICKNESS_CM, ENERGY_KEV, N, SEED = "water", 10.0, 60.0, 500_000, 1
 
@@ -40,7 +40,7 @@ def main() -> None:
 
     print(f"mu(xraylib, water, {ENERGY_KEV} keV) = {mu:.6f} /cm")
     print(f"解析解 Beer-Lambert exp(-mu*t)      = {expected * 100:.3f}%")
-    print(f"viveMonte MC 一次透過率 (n={N}, seed={SEED}) = {uncollided * 100:.3f}%"
+    print(f"ChatCarlo MC 一次透過率 (n={N}, seed={SEED}) = {uncollided * 100:.3f}%"
           f"  (二項近似の統計誤差 ±{stderr * 100:.4f}pp)")
 
 

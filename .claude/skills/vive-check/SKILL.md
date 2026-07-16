@@ -1,6 +1,6 @@
 ---
 name: vive-check
-description: viveMonteのシーンを人間と確認しながら段階実行する（ジオメトリー確認→軌跡確認→本計算→結果確認の関門つきワークフロー）。「シーンを確認しながら実行して」「vive-checkして」などで起動。
+description: ChatCarloのシーンを人間と確認しながら段階実行する（ジオメトリー確認→軌跡確認→本計算→結果確認の関門つきワークフロー）。「シーンを確認しながら実行して」「vive-checkして」などで起動。
 ---
 
 # vive-check — 関門つき実行ワークフロー
@@ -14,7 +14,7 @@ vive-interviewから引き継いだ場合は `runs/<シーン名>/requirements.m
 渡す。
 
 このスキルは**進行と判断だけ**を担う。実装（軌跡記録・断面図描画など）は
-すべて `vivemonte` CLI（`vivemonte/transport.py` / `preview.py` / `plotting.py`、
+すべて `chatcarlo` CLI（`chatcarlo/transport.py` / `preview.py` / `plotting.py`、
 テスト付き）にある。各関門で必ずユーザーの承認を待ち、承認前に次の段階を
 先行実行しない。
 
@@ -28,9 +28,9 @@ vive-interviewから引き継いだ場合は `runs/<シーン名>/requirements.m
 ## 関門1: ジオメトリー確認
 
 1. `mkdir -p runs/<シーン名>`（未作成なら）。
-   `.venv/bin/python -m vivemonte validate <scene>` — エラーが出たら
+   `.venv/bin/python -m chatcarlo validate <scene>` — エラーが出たら
    scene.yamlの修正案を提示して停止する（先へ進まない）。
-2. `.venv/bin/python -m vivemonte preview <scene> -o runs/<シーン名>/preview.html`
+2. `.venv/bin/python -m chatcarlo preview <scene> -o runs/<シーン名>/preview.html`
 3. vive-auditスキルでステージA（シーン監査）を実施し、監査報告を提示する
    （ユーザーが監査を不要と言った場合は省略可）。`runs/<シーン名>/requirements.md`
    があれば必ずそのパスも監査依頼に含める（ユーザー意図との一致検証に使う）。
@@ -41,7 +41,7 @@ vive-interviewから引き継いだ場合は `runs/<シーン名>/requirements.m
 
 ## 関門2: ビーム・軌跡確認
 
-1. `.venv/bin/python -m vivemonte trace <scene> -n 200 --seed 42 -o runs/<シーン名>/trace.html`
+1. `.venv/bin/python -m chatcarlo trace <scene> -n 200 --seed 42 -o runs/<シーン名>/trace.html`
    （n=200は既定。2000を超えると自動的にクランプされ警告が出る。10秒以内に
    終わるはず）
 2. `open <html>` で表示する。確認ポイントを言葉で添える:
@@ -57,7 +57,7 @@ vive-interviewから引き継いだ場合は `runs/<シーン名>/requirements.m
 1. history数と解像度をユーザーに確認する（既定案: `-n 1e6 --resolution 2`）。
    目安: 3e5 historiesで線量グリッド併用時に約15秒。1e7を超える場合は
    実行前に「時間がかかります」と予告する。
-2. `.venv/bin/python -m vivemonte run <scene> -n <N> --seed <s> \
+2. `.venv/bin/python -m chatcarlo run <scene> -n <N> --seed <s> \
        --dose-grid --resolution <R> --dose-out runs/<シーン名>/dose.npz`
 3. vive-auditスキルでステージB（実行結果監査）を実施する。run の標準出力
    全文を監査官に渡し、独立オーダー照合（Beer-Lambert / SpekPyカーマ）まで
@@ -67,7 +67,7 @@ vive-interviewから引き継いだ場合は `runs/<シーン名>/requirements.m
 
 ## 関門4: 結果確認
 
-1. `.venv/bin/python -m vivemonte plot runs/<シーン名>/dose.npz --scene <scene> \
+1. `.venv/bin/python -m chatcarlo plot runs/<シーン名>/dose.npz --scene <scene> \
        -o runs/<シーン名>/maps.png`
    （既定は最大値ボクセルを通る3断面。`--axis x|y|z --pos <cm>` で特定断面、
    `--quantity h10` でH*(10)マップに切り替えられる）
@@ -81,7 +81,7 @@ vive-interviewから引き継いだ場合は `runs/<シーン名>/requirements.m
 
 線量・H*(10)の絶対値を口頭で報告するときは、必ず「1 historyあたり」か
 「校正済みの実測相当値」（mAs基準またはCTDIvol基準）かを明示すること。
-`vivemonte plot` のカラーバーラベル（`Gy/history` か `Gy (calibrated)` 等）にも
+`chatcarlo plot` のカラーバーラベル（`Gy/history` か `Gy (calibrated)` 等）にも
 既にこの区別が入っている。過去に絶対値校正の桁を間違えたことがある
 （`docs/lessons_learned.md` 参照）ため、数値だけを鵜呑みにせず単位表記を
 確認してから報告する。

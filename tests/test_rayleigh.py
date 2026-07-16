@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from vivemonte.materials import element_composition, rayleigh_element_weights, rayleigh_form_factor_table
-from vivemonte.physics import sample_rayleigh_cos_theta, sample_rayleigh_element
+from chatcarlo.materials import element_composition, rayleigh_element_weights, rayleigh_form_factor_table
+from chatcarlo.physics import sample_rayleigh_cos_theta, sample_rayleigh_element
 
 
 def test_form_factor_at_q0_equals_Z():

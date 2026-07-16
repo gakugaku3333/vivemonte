@@ -1,4 +1,4 @@
-"""線量マップの断面図 — vivemonte run --dose-out の .npz を可視化する。
+"""線量マップの断面図 — chatcarlo run --dose-out の .npz を可視化する。
 
 輸送・タリーとは独立な後処理。「結果を視覚的に確認する」という
 human-in-the-loopワークフローの3つ目の関門（vive-checkスキル）向け。
@@ -143,7 +143,7 @@ def plot_dose_npz(npz_path: str, out_path: str, quantity: str = "dose",
             _draw_slice(ax_plt, data, ax_name, center_idx[ax_name], origin_cm, voxel_size_cm,
                         shape, unit_label, vmin, vmax, geometry)
 
-    fig.suptitle(f"viveMonte — {unit_label}")
+    fig.suptitle(f"ChatCarlo — {unit_label}")
     fig.tight_layout()
     fig.savefig(out_path, dpi=140)
     plt.close(fig)

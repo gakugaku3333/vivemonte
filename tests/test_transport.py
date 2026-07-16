@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from vivemonte.geometry import Geometry
-from vivemonte.materials import linear_mu
-from vivemonte.transport import transport_photons
+from chatcarlo.geometry import Geometry
+from chatcarlo.materials import linear_mu
+from chatcarlo.transport import transport_photons
 
 
 def _pencil_beam_slab(material: str, thickness_cm: float, energy_keV: float, n: int, seed: int):

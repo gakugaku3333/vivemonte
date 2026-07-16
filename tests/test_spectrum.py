@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from vivemonte import spectrum
+from chatcarlo import spectrum
 
 
 def test_spekpy_available():

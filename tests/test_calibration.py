@@ -4,9 +4,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from vivemonte.scene import validate_scene
-from vivemonte.source import photon_count_through_field
-from vivemonte.transport import run_transport
+from chatcarlo.scene import validate_scene
+from chatcarlo.source import photon_count_through_field
+from chatcarlo.transport import run_transport
 
 _BASE_SOURCE = {
     "kvp": 120, "position": [0, -180, 140], "direction": [0, 1, 0],
@@ -86,12 +86,12 @@ def test_calibrated_dose_matches_spekpy_kerma_order_of_magnitude():
 
     水スラブ手前（線源からの距離=170cm、スラブは減弱・散乱源になるので厳密一致は
     期待しないが、桁が合っていることを見る）でSpekPyが計算する自由空間カーマ
-    （mas=4での絶対値）と、viveMonteのボクセル線量タリー最大値を比較する。
+    （mas=4での絶対値）と、ChatCarloのボクセル線量タリー最大値を比較する。
     """
     import spekpy as sp
 
-    from vivemonte.geometry import Geometry
-    from vivemonte.diagnostics import dose_map_Gy
+    from chatcarlo.geometry import Geometry
+    from chatcarlo.diagnostics import dose_map_Gy
 
     raw = {"source": {**_BASE_SOURCE, "mas": 4.0}, "geometry": _BASE_GEOMETRY}
     scene = validate_scene(raw)

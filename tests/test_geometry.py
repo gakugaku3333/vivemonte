@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from vivemonte.geometry import Geometry
+from chatcarlo.geometry import Geometry
 
 
 def test_nearest_object_distance_outside_box():

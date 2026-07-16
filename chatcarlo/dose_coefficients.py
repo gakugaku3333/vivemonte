@@ -6,8 +6,8 @@
 ICRP74公表値の転記。取得元・手順は scripts/fetch_h_star_10.py 参照）。
 
 H*(10)はカーマとは異なる量（フルエンスベースの防護量）であり、
-`vivemonte/tally.py` の吸収線量タリーとは別に、フルエンスの
-track-length estimatorとして積算する（vivemonte/transport.py参照）。
+`chatcarlo/tally.py` の吸収線量タリーとは別に、フルエンスの
+track-length estimatorとして積算する（chatcarlo/transport.py参照）。
 
 診断X線領域ではH*(10)は個人線量当量Hp(10,0°)・実効線量E(AP)と
 数値的にほぼ一致することが知られている（Otto, JINST 2019,

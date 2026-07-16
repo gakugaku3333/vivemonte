@@ -1,6 +1,6 @@
 """線量グリッドの後処理と「最大値が非物理的な位置に落ちていないか」の診断。
 
-`vivemonte run --dose-grid` の最大吸収線量・最大H*(10)は、背景（空気）ボクセルや
+`chatcarlo run --dose-grid` の最大吸収線量・最大H*(10)は、背景（空気）ボクセルや
 点線源の1/r²発散近傍に落ちることがある（docs/lessons_learned.md参照）。
 CLIはここにある判定関数で該当ケースを検出して警告を出す。
 """
@@ -54,7 +54,7 @@ def near_source_air_warning(material: str, background: str, distance_from_source
     材料が背景（空気）かつ、シーン内のどの物体よりも線源に近い位置にある場合のみ
     警告する。「シーン内に実在する物体よりも線源に近い」は、その位置に人や検出器が
     存在し得ないことの明確な根拠になる（実際のX線管は housing/コリメータで
-    覆われているが、viveMonteの点線源モデルはそれを持たない）。
+    覆われているが、ChatCarloの点線源モデルはそれを持たない）。
     """
     if material != background:
         return None

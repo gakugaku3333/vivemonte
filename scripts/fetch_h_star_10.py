@@ -1,5 +1,5 @@
 """光子の周辺線量当量H*(10)換算係数（ICRP Publication 74 / ICRU Report 57）を取得し
-vivemonte/data/h_star_10/photons_icrp74.csv として同梱する。
+chatcarlo/data/h_star_10/photons_icrp74.csv として同梱する。
 
 原資料（ICRP74本文）を直接パースする代わりに、OpenMCプロジェクト
 （MITライセンス）が同梱するテーブル `openmc/data/dose/icrp74/photons_H10.txt`
@@ -17,7 +17,7 @@ from pathlib import Path
 
 URL = ("https://raw.githubusercontent.com/openmc-dev/openmc/develop/"
        "openmc/data/dose/icrp74/photons_H10.txt")
-OUT = Path(__file__).resolve().parent.parent / "vivemonte" / "data" / "h_star_10" / "photons_icrp74.csv"
+OUT = Path(__file__).resolve().parent.parent / "chatcarlo" / "data" / "h_star_10" / "photons_icrp74.csv"
 
 
 def main() -> None:

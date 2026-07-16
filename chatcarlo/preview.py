@@ -147,13 +147,13 @@ def scene_to_json(scene: Scene, trajectories: list[dict] | None = None) -> dict:
             "warnings": [str(w) for w in scene.warnings], "trajectories": trajectories or []}
 
 
-def render_html(scene: Scene, title: str = "viveMonte geometry preview",
+def render_html(scene: Scene, title: str = "ChatCarlo geometry preview",
                  trajectories: list[dict] | None = None) -> str:
     data = json.dumps(scene_to_json(scene, trajectories=trajectories), ensure_ascii=False)
     return _TEMPLATE.replace("__TITLE__", title).replace("__DATA__", data)
 
 
-def write_html(scene: Scene, out_path: str, title: str = "viveMonte geometry preview",
+def write_html(scene: Scene, out_path: str, title: str = "ChatCarlo geometry preview",
                 trajectories: list[dict] | None = None) -> str:
     html = render_html(scene, title, trajectories=trajectories)
     with open(out_path, "w", encoding="utf-8") as f:

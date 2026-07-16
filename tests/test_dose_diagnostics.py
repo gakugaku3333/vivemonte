@@ -1,4 +1,4 @@
-"""最大値ボクセルの診断（vivemonte run --dose-grid の「最大」統計が
+"""最大値ボクセルの診断（chatcarlo run --dose-grid の「最大」統計が
 点線源近傍・空気中ボクセルという非物理的な位置に落ちていないかの検証）。
 
 背景: chest_room.yamlで実際にH*(10)最大値を調べたところ、線源から
@@ -12,12 +12,12 @@ from __future__ import annotations
 
 import numpy as np
 
-from vivemonte.geometry import Geometry
-from vivemonte.scene import validate_scene
-from vivemonte.tally import VoxelGrid
-from vivemonte.diagnostics import (background_medium_warning, dose_map_Gy,
+from chatcarlo.geometry import Geometry
+from chatcarlo.scene import validate_scene
+from chatcarlo.tally import VoxelGrid
+from chatcarlo.diagnostics import (background_medium_warning, dose_map_Gy,
                                     max_voxel_position_cm, near_source_air_warning)
-from vivemonte.transport import run_transport
+from chatcarlo.transport import run_transport
 
 _BASE_SOURCE = {
     "kvp": 120, "position": [0, -180, 140], "direction": [0, 1, 0],
@@ -137,9 +137,9 @@ def test_dose_max_voxel_inside_all_water_grid_does_not_trigger_warning():
     含む。ここではtransport_photonsを直接呼び、水スラブ内部だけを覆う専用グリッドを
     敷くことで「境界効果を含まない領域の最大値」では警告が出ないことを確認する。
     """
-    from vivemonte.tally import VoxelGrid
-    from vivemonte.source import sample_source_photons
-    from vivemonte.transport import transport_photons
+    from chatcarlo.tally import VoxelGrid
+    from chatcarlo.source import sample_source_photons
+    from chatcarlo.transport import transport_photons
 
     src = {**_BASE_SOURCE, "position": [0, -20, 140], "field": {"size_cm": [2, 2], "sid_cm": 20}}
     scene = validate_scene({"source": src, "geometry": _SLAB_GEOMETRY})

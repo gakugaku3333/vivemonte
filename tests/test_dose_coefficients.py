@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from vivemonte.dose_coefficients import h_star_10_per_fluence
+from chatcarlo.dose_coefficients import h_star_10_per_fluence
 
 
 def test_table_points_match_icrp74_exactly():

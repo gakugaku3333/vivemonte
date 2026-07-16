@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from vivemonte.source import sample_source_photons
+from chatcarlo.source import sample_source_photons
 
 _ISO = np.array([0.0, 0.0, 110.0])
 _SRC = {
