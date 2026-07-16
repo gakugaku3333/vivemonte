@@ -205,6 +205,47 @@
   .callout.caution { border-left-color: var(--amber); }
   .callout p:last-child { margin-bottom: 0; }
 
+  /* abstract */
+  .abstract-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 28px 30px;
+    margin: 24px 0;
+  }
+  .abstract-block .abstract-title {
+    font-size: 1.02rem;
+    font-weight: 600;
+    margin: 0 0 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .abstract-block .abstract-part { margin-bottom: 16px; }
+  .abstract-block .abstract-part:last-child { margin-bottom: 0; }
+  .abstract-block .abstract-label {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--teal);
+    background: var(--teal-soft);
+    border-radius: 4px;
+    padding: 2px 8px;
+    margin-bottom: 6px;
+  }
+  .abstract-block p { margin: 0; max-width: none; font-size: 0.95rem; }
+  .abstract-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
   /* chat */
   .chat { display: flex; flex-direction: column; gap: 14px; margin: 28px 0; }
   .bubble-row { display: flex; }
@@ -365,6 +406,7 @@
   <nav class="toc">
     <div class="toc-label">目次</div>
     <ol>
+      <li><a href="#abstract">学会抄録本文</a></li>
       <li><a href="#summary">伝えたいこと</a></li>
       <li><a href="#montecarlo">モンテカルロ法とは</a></li>
       <li><a href="#system">ChatCarloについて</a></li>
@@ -385,6 +427,38 @@
         演題名：<strong>対話型AIで行えるモンテカルロ計算システムの開発</strong>
       </div>
     </header>
+
+    <section id="abstract">
+      <h2>学会抄録本文</h2>
+      <p>UMIN演題登録システムに提出する抄録の本文です（400字以内の指定フォーマット、現時点で392字）。</p>
+      <div class="abstract-block">
+        <div class="abstract-title">演題名：対話型AIで行えるモンテカルロ計算システムの開発</div>
+        <div class="abstract-part">
+          <span class="abstract-label">目的</span>
+          <p>モンテカルロ法は放射線分野で有用だが、専門的なプログラミング知識が必要で参入障壁が高い。誰もがチャットだけでシミュレーションを行える環境の実現を目指し、システムを開発した。</p>
+        </div>
+        <div class="abstract-part">
+          <span class="abstract-label">方法</span>
+          <p>Claude Codeを利用し、Pythonで診断X線領域の光子輸送モンテカルロコードと、それをチャットで操作するワークフローを構築し、確立コードEGS5との比較で計算精度を評価した。</p>
+        </div>
+        <div class="abstract-part">
+          <span class="abstract-label">結果</span>
+          <p>「水ファントムに60keVの光子の線量分布を計算したい」とチャットで伝えると、AIが幾何学条件を確認し、線源と水ファントムを配置し、3D画像で確認後に計算を実行、線量分布を提示する一連の流れを実現した。EGS5との比較はPDD平均+0.10%・最大0.44%、OCR平均+0.15%・最大1.25%で一致し、物理的妥当性を確認した。</p>
+        </div>
+        <div class="abstract-part">
+          <span class="abstract-label">結論</span>
+          <p>プログラミング知識がなくてもAIとのチャットでモンテカルロ計算を実行できるシステムを構築できた。</p>
+        </div>
+        <div class="abstract-meta">
+          <span>提出締切：2026年7月17日(金) 12:00</span>
+          <span>提出方法：UMIN演題登録システム</span>
+        </div>
+      </div>
+      <p>
+        以下では、この抄録の【結果】【結論】が実際にどう成り立っているかを、
+        システムの仕組みと実演の画面つきで説明します。
+      </p>
+    </section>
 
     <section id="summary">
       <h2>この発表で伝えたいこと</h2>
