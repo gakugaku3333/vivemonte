@@ -175,6 +175,39 @@ def rayleigh_form_factor_table(z: int, q_max: float = 20.0, n: int = 2000) -> tu
     return q_grid, f_grid
 
 
+def compton_element_weights(material: str, energies_keV) -> tuple[np.ndarray, np.ndarray]:
+    """材料内でコンプトン相互作用がどの構成元素で起きたかの重み。
+
+    `rayleigh_element_weights`と同型。質量分率×元素別コンプトン断面積
+    （xraylib.CS_Compt、束縛効果込み）で規格化する。
+    """
+    comp = element_composition(material)
+    zs = np.array([z for z, _ in comp])
+    fracs = np.array([f for _, f in comp])
+    e = np.atleast_1d(np.asarray(energies_keV, dtype=float))
+    cs = np.array([[xraylib.CS_Compt(int(z), ek) for ek in e] for z in zs])
+    weighted = fracs[:, None] * cs
+    total = weighted.sum(axis=0, keepdims=True)
+    total = np.where(total > 0, total, 1.0)
+    return zs, weighted / total
+
+
+@functools.lru_cache(maxsize=None)
+def incoherent_sq_table(z: int, q_max: float = 20.0, n: int = 2000) -> tuple[np.ndarray, np.ndarray]:
+    """コンプトン散乱の非干渉性散乱関数 S(Z,q) を q∈[0, q_max] Å⁻¹ でテーブル化
+    （xraylib.SF_Compt、EPDLベース）。
+
+    `rayleigh_form_factor_table`と対称的な用途: S(Z,q)はq→∞でZに単調収束し、
+    束縛コンプトン散乱の追加棄却（S(Z,q)/Zを受理確率とする）に使う。xraylibの
+    SF_Comptはq<~1e-3付近でスプライン外挿エラーになるため、q=0(物理的極限
+    S=0)を手動で追加し、テーブルはq=1e-3から張る。
+    """
+    q_grid = np.concatenate([[0.0], np.linspace(1e-3, q_max, n - 1)])
+    s_grid = np.concatenate([[0.0],
+                              [xraylib.SF_Compt(z, q) for q in q_grid[1:]]])
+    return q_grid, s_grid
+
+
 def density(material: str) -> float:
     return resolve(material)[1]
 

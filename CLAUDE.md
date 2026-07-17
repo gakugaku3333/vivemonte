@@ -79,9 +79,12 @@ any object is `background` (default air).
 trajectory recording for `trace` in [trajectory.py](chatcarlo/trajectory.py); dose-map conversion and the
 non-physical-max warnings in [diagnostics.py](chatcarlo/diagnostics.py).
 
-**Physics**: photoelectric / Compton (Klein-Nishina with Kahn rejection sampling) / Rayleigh (atomic form factor
-F(Z,q) via `xraylib.FF_Rayl`, compounds sampled by mass-fraction-weighted element pick before the angular
-distribution). Electron range is neglected (kerma approximation — local absorption at the interaction point).
+**Physics**: photoelectric / Compton (bound Compton — free-electron Klein-Nishina via Kahn rejection sampling,
+then an additional S(Z,q)/Z rejection from the incoherent scattering function via `xraylib.SF_Compt`; compounds
+sampled by mass-fraction-weighted element pick, same pattern as Rayleigh, before the angular distribution) /
+Rayleigh (atomic form factor F(Z,q) via `xraylib.FF_Rayl`, compounds sampled by mass-fraction-weighted element
+pick before the angular distribution). Electron range is neglected (kerma approximation — local absorption at
+the interaction point).
 [tests/test_transport.py](tests/test_transport.py) checks primary transmission against the analytic Beer-Lambert
 law (`exp(-μt)`).
 

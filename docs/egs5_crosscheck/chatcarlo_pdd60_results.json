@@ -11,9 +11,9 @@
       1.0
     ],
     "mass_g": 4.0,
-    "mean_Gy_per_history": 4.74183409797156e-15,
-    "sem_Gy_per_history": 9.90670927986932e-18,
-    "rel_err": 0.0020892146530616003
+    "mean_Gy_per_history": 4.771008855356413e-15,
+    "sem_Gy_per_history": 9.9930766970371e-18,
+    "rel_err": 0.002094541636789852
   },
   "pdd_z1-2": {
     "lo_cm": [
@@ -27,9 +27,9 @@
       2.0
     ],
     "mass_g": 4.0,
-    "mean_Gy_per_history": 4.71160562810484e-15,
-    "sem_Gy_per_history": 1.029339909885218e-17,
-    "rel_err": 0.002184690296966242
+    "mean_Gy_per_history": 4.737636368474074e-15,
+    "sem_Gy_per_history": 1.0380847972710484e-17,
+    "rel_err": 0.0021911449434550015
   },
   "pdd_z2-3": {
     "lo_cm": [
@@ -43,9 +43,9 @@
       3.0
     ],
     "mass_g": 4.0,
-    "mean_Gy_per_history": 4.40202179510944e-15,
-    "sem_Gy_per_history": 1.01046842391491e-17,
-    "rel_err": 0.0022954643819290505
+    "mean_Gy_per_history": 4.441739529382013e-15,
+    "sem_Gy_per_history": 1.0258473128652882e-17,
+    "rel_err": 0.002309562067022008
   },
   "pdd_z3-4": {
     "lo_cm": [
@@ -59,9 +59,9 @@
       4.0
     ],
     "mass_g": 4.0,
-    "mean_Gy_per_history": 4.039173033669642e-15,
-    "sem_Gy_per_history": 9.812706873949367e-18,
-    "rel_err": 0.0024293851221903195
+    "mean_Gy_per_history": 4.0518582077022555e-15,
+    "sem_Gy_per_history": 9.904261834345438e-18,
+    "rel_err": 0.00244437522900437
   },
   "pdd_z4-5": {
     "lo_cm": [
@@ -75,9 +75,9 @@
       5.0
     ],
     "mass_g": 4.0,
-    "mean_Gy_per_history": 3.614127923186617e-15,
-    "sem_Gy_per_history": 9.371681241065315e-18,
-    "rel_err": 0.0025930684912785816
+    "mean_Gy_per_history": 3.619491156352168e-15,
+    "sem_Gy_per_history": 9.451253509396309e-18,
+    "rel_err": 0.0026112105545027953
   },
   "pdd_z5-6": {
     "lo_cm": [
@@ -91,9 +91,9 @@
       6.0
     ],
     "mass_g": 4.0,
-    "mean_Gy_per_history": 3.181004090574173e-15,
-    "sem_Gy_per_history": 8.865923836576198e-18,
-    "rel_err": 0.002787146317367952
+    "mean_Gy_per_history": 3.1955623898453566e-15,
+    "sem_Gy_per_history": 8.949609932332698e-18,
+    "rel_err": 0.00280063689595677
   },
   "pdd_z6-7": {
     "lo_cm": [
@@ -107,9 +107,9 @@
       7.0
     ],
     "mass_g": 4.0,
-    "mean_Gy_per_history": 2.7771491079647652e-15,
-    "sem_Gy_per_history": 8.318987949314288e-18,
-    "rel_err": 0.0029955136097862822
+    "mean_Gy_per_history": 2.795487469312309e-15,
+    "sem_Gy_per_history": 8.450528958965506e-18,
+    "rel_err": 0.0030229178458969588
   },
   "pdd_z7-8": {
     "lo_cm": [
@@ -123,9 +123,9 @@
       8.0
     ],
     "mass_g": 4.0,
-    "mean_Gy_per_history": 2.4047539620775855e-15,
-    "sem_Gy_per_history": 7.785653258810564e-18,
-    "rel_err": 0.003237609078345859
+    "mean_Gy_per_history": 2.41548820645566e-15,
+    "sem_Gy_per_history": 7.878947095995078e-18,
+    "rel_err": 0.0032618445724295893
   },
   "pdd_z8-9": {
     "lo_cm": [
@@ -139,9 +139,9 @@
       9.0
     ],
     "mass_g": 4.0,
-    "mean_Gy_per_history": 2.0832259686549536e-15,
-    "sem_Gy_per_history": 7.286611386869394e-18,
-    "rel_err": 0.0034977537225949784
+    "mean_Gy_per_history": 2.0803582518387414e-15,
+    "sem_Gy_per_history": 7.340137941844322e-18,
+    "rel_err": 0.0035283047693139783
   },
   "pdd_z9-10": {
     "lo_cm": [
@@ -155,9 +155,9 @@
       10.0
     ],
     "mass_g": 4.0,
-    "mean_Gy_per_history": 1.7877370583032476e-15,
-    "sem_Gy_per_history": 6.8081717695659376e-18,
-    "rel_err": 0.003808262371664218
+    "mean_Gy_per_history": 1.7833660599767786e-15,
+    "sem_Gy_per_history": 6.846562368199023e-18,
+    "rel_err": 0.003839123398080242
   },
   "pdd_z10-11": {
     "lo_cm": [
@@ -171,9 +171,9 @@
       11.0
     ],
     "mass_g": 4.0,
-    "mean_Gy_per_history": 1.532053219981866e-15,
-    "sem_Gy_per_history": 6.3118407498579276e-18,
-    "rel_err": 0.0041198573701849844
+    "mean_Gy_per_history": 1.5102276812099193e-15,
+    "sem_Gy_per_history": 6.306612152223731e-18,
+    "rel_err": 0.0041759346823594095
   },
   "pdd_z11-12": {
     "lo_cm": [
@@ -187,9 +187,9 @@
       12.0
     ],
     "mass_g": 4.0,
-    "mean_Gy_per_history": 1.3023020718004223e-15,
-    "sem_Gy_per_history": 5.829117502012659e-18,
-    "rel_err": 0.004476010311458655
+    "mean_Gy_per_history": 1.2881283184983729e-15,
+    "sem_Gy_per_history": 5.855631184634125e-18,
+    "rel_err": 0.004545844618539471
   },
   "pdd_z12-13": {
     "lo_cm": [
@@ -203,9 +203,9 @@
       13.0
     ],
     "mass_g": 4.0,
-    "mean_Gy_per_history": 1.1147010629283177e-15,
-    "sem_Gy_per_history": 5.43814574620016e-18,
-    "rel_err": 0.004878568727578102
+    "mean_Gy_per_history": 1.0891818855351782e-15,
+    "sem_Gy_per_history": 5.4039529691960075e-18,
+    "rel_err": 0.004961478923734333
   },
   "pdd_z13-14": {
     "lo_cm": [
@@ -219,9 +219,9 @@
       14.0
     ],
     "mass_g": 4.0,
-    "mean_Gy_per_history": 9.43379861679284e-16,
-    "sem_Gy_per_history": 5.019362102161566e-18,
-    "rel_err": 0.005320616122997093
+    "mean_Gy_per_history": 9.235122986480522e-16,
+    "sem_Gy_per_history": 4.990181842876001e-18,
+    "rel_err": 0.005403481740504405
   },
   "pdd_z14-15": {
     "lo_cm": [
@@ -235,9 +235,9 @@
       15.0
     ],
     "mass_g": 4.0,
-    "mean_Gy_per_history": 7.891004381691748e-16,
-    "sem_Gy_per_history": 4.584128704700154e-18,
-    "rel_err": 0.005809309541553398
+    "mean_Gy_per_history": 7.723746526211453e-16,
+    "sem_Gy_per_history": 4.591925587306947e-18,
+    "rel_err": 0.005945204923185531
   },
   "lat_shallow_x-8--7": {
     "lo_cm": [
@@ -251,9 +251,9 @@
       1.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 3.5597858072207533e-16,
-    "sem_Gy_per_history": 3.9984940710270635e-18,
-    "rel_err": 0.011232400732977878
+    "mean_Gy_per_history": 3.534581277497136e-16,
+    "sem_Gy_per_history": 3.991853905981114e-18,
+    "rel_err": 0.011293710888458552
   },
   "lat_shallow_x-7--6": {
     "lo_cm": [
@@ -267,9 +267,9 @@
       1.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 5.049487038824087e-16,
-    "sem_Gy_per_history": 4.7010806514687486e-18,
-    "rel_err": 0.00931001627556118
+    "mean_Gy_per_history": 5.175041033542877e-16,
+    "sem_Gy_per_history": 4.802097596342063e-18,
+    "rel_err": 0.009279342067466672
   },
   "lat_shallow_x-6--5": {
     "lo_cm": [
@@ -283,9 +283,9 @@
       1.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 8.015576931914686e-16,
-    "sem_Gy_per_history": 5.881618889979541e-18,
-    "rel_err": 0.0073377361853535295
+    "mean_Gy_per_history": 8.139885395710028e-16,
+    "sem_Gy_per_history": 5.9227359070952675e-18,
+    "rel_err": 0.007276190780544322
   },
   "lat_shallow_x-5--4": {
     "lo_cm": [
@@ -299,9 +299,9 @@
       1.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 4.200634740803301e-15,
-    "sem_Gy_per_history": 1.2333190955786052e-17,
-    "rel_err": 0.0029360303184626656
+    "mean_Gy_per_history": 4.229201804405423e-15,
+    "sem_Gy_per_history": 1.2415089010277146e-17,
+    "rel_err": 0.0029355631593046116
   },
   "lat_shallow_x-4--3": {
     "lo_cm": [
@@ -315,9 +315,9 @@
       1.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 4.490391672098826e-15,
-    "sem_Gy_per_history": 1.2778567220481007e-17,
-    "rel_err": 0.0028457578210562325
+    "mean_Gy_per_history": 4.501055778670921e-15,
+    "sem_Gy_per_history": 1.2833663225982792e-17,
+    "rel_err": 0.0028512562067765216
   },
   "lat_shallow_x-3--2": {
     "lo_cm": [
@@ -331,9 +331,9 @@
       1.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 4.625618678048695e-15,
-    "sem_Gy_per_history": 1.3030311748529327e-17,
-    "rel_err": 0.0028169878789113954
+    "mean_Gy_per_history": 4.67369310279805e-15,
+    "sem_Gy_per_history": 1.3110047545056436e-17,
+    "rel_err": 0.002805072403493439
   },
   "lat_shallow_x-2--1": {
     "lo_cm": [
@@ -347,9 +347,9 @@
       1.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 4.672852692791061e-15,
-    "sem_Gy_per_history": 1.3065626576535989e-17,
-    "rel_err": 0.0027960707164368117
+    "mean_Gy_per_history": 4.7555952638153055e-15,
+    "sem_Gy_per_history": 1.3261634446118835e-17,
+    "rel_err": 0.002788638164190476
   },
   "lat_shallow_x-1-0": {
     "lo_cm": [
@@ -363,9 +363,9 @@
       1.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 4.751379693574781e-15,
-    "sem_Gy_per_history": 1.3183233228736537e-17,
-    "rel_err": 0.0027746116031442452
+    "mean_Gy_per_history": 4.771346697428239e-15,
+    "sem_Gy_per_history": 1.3271643554976273e-17,
+    "rel_err": 0.002781529911068861
   },
   "lat_shallow_x0-1": {
     "lo_cm": [
@@ -379,9 +379,9 @@
       1.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 4.73228850236834e-15,
-    "sem_Gy_per_history": 1.3178748421867918e-17,
-    "rel_err": 0.0027848573507875587
+    "mean_Gy_per_history": 4.7706710132845885e-15,
+    "sem_Gy_per_history": 1.3269901558859812e-17,
+    "rel_err": 0.002781558720336814
   },
   "lat_shallow_x1-2": {
     "lo_cm": [
@@ -395,9 +395,9 @@
       1.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 4.696861152470215e-15,
-    "sem_Gy_per_history": 1.312335478815073e-17,
-    "rel_err": 0.0027940691372681475
+    "mean_Gy_per_history": 4.711302123877966e-15,
+    "sem_Gy_per_history": 1.3198163439613241e-17,
+    "rel_err": 0.002801383373976783
   },
   "lat_shallow_x2-3": {
     "lo_cm": [
@@ -411,9 +411,9 @@
       1.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 4.614335882651224e-15,
-    "sem_Gy_per_history": 1.300463125501785e-17,
-    "rel_err": 0.0028183104970559442
+    "mean_Gy_per_history": 4.6640012665465214e-15,
+    "sem_Gy_per_history": 1.3105680432235841e-17,
+    "rel_err": 0.0028099650242891113
   },
   "lat_shallow_x3-4": {
     "lo_cm": [
@@ -427,9 +427,9 @@
       1.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 4.466732951454927e-15,
-    "sem_Gy_per_history": 1.2765407171072312e-17,
-    "rel_err": 0.002857884567940042
+    "mean_Gy_per_history": 4.513656129999133e-15,
+    "sem_Gy_per_history": 1.285907441078523e-17,
+    "rel_err": 0.002848926466799255
   },
   "lat_shallow_x4-5": {
     "lo_cm": [
@@ -443,9 +443,9 @@
       1.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 4.180298560937218e-15,
-    "sem_Gy_per_history": 1.2287679306219289e-17,
-    "rel_err": 0.00293942624602019
+    "mean_Gy_per_history": 4.210877355665832e-15,
+    "sem_Gy_per_history": 1.235989023454801e-17,
+    "rel_err": 0.002935229214861244
   },
   "lat_shallow_x5-6": {
     "lo_cm": [
@@ -459,9 +459,9 @@
       1.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 7.900933221392026e-16,
-    "sem_Gy_per_history": 5.851946894067493e-18,
-    "rel_err": 0.0074066527713753634
+    "mean_Gy_per_history": 8.126053088687136e-16,
+    "sem_Gy_per_history": 5.931370184246471e-18,
+    "rel_err": 0.007299201862837887
   },
   "lat_shallow_x6-7": {
     "lo_cm": [
@@ -475,9 +475,9 @@
       1.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 4.993651654696629e-16,
-    "sem_Gy_per_history": 4.740937884466269e-18,
-    "rel_err": 0.00949392991801365
+    "mean_Gy_per_history": 5.123964629085625e-16,
+    "sem_Gy_per_history": 4.766381579187066e-18,
+    "rel_err": 0.009302135990813094
   },
   "lat_shallow_x7-8": {
     "lo_cm": [
@@ -491,9 +491,9 @@
       1.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 3.4893241842721734e-16,
-    "sem_Gy_per_history": 3.976083192985847e-18,
-    "rel_err": 0.011394995085030212
+    "mean_Gy_per_history": 3.624488251910998e-16,
+    "sem_Gy_per_history": 4.078406761542284e-18,
+    "rel_err": 0.01125236579092775
   },
   "lat_10cm_x-8--7": {
     "lo_cm": [
@@ -507,9 +507,9 @@
       10.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 4.104697662759138e-16,
-    "sem_Gy_per_history": 4.430290668609192e-18,
-    "rel_err": 0.010793220433271066
+    "mean_Gy_per_history": 4.158692244966483e-16,
+    "sem_Gy_per_history": 4.591617070888157e-18,
+    "rel_err": 0.011041011934570704
   },
   "lat_10cm_x-7--6": {
     "lo_cm": [
@@ -523,9 +523,9 @@
       10.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 5.385285927695449e-16,
-    "sem_Gy_per_history": 5.084696530062954e-18,
-    "rel_err": 0.009441832055589428
+    "mean_Gy_per_history": 5.419884143909372e-16,
+    "sem_Gy_per_history": 5.181268231814882e-18,
+    "rel_err": 0.00955973982882524
   },
   "lat_10cm_x-6--5": {
     "lo_cm": [
@@ -539,9 +539,9 @@
       10.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 7.145599521175257e-16,
-    "sem_Gy_per_history": 5.803100593473752e-18,
-    "rel_err": 0.00812122282570812
+    "mean_Gy_per_history": 7.183454966155226e-16,
+    "sem_Gy_per_history": 5.912690854564359e-18,
+    "rel_err": 0.008230984787155959
   },
   "lat_10cm_x-5--4": {
     "lo_cm": [
@@ -555,9 +555,9 @@
       10.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 1.4244115110197395e-15,
-    "sem_Gy_per_history": 7.769712150460006e-18,
-    "rel_err": 0.0054546822251511085
+    "mean_Gy_per_history": 1.4100436778794788e-15,
+    "sem_Gy_per_history": 7.746335822198173e-18,
+    "rel_err": 0.0054936850139618715
   },
   "lat_10cm_x-4--3": {
     "lo_cm": [
@@ -571,9 +571,9 @@
       10.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 1.5948384302140797e-15,
-    "sem_Gy_per_history": 8.238465519328992e-18,
-    "rel_err": 0.005165705417710006
+    "mean_Gy_per_history": 1.5801401259650369e-15,
+    "sem_Gy_per_history": 8.237514551365055e-18,
+    "rel_err": 0.00521315446396513
   },
   "lat_10cm_x-3--2": {
     "lo_cm": [
@@ -587,9 +587,9 @@
       10.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 1.6851141290390587e-15,
-    "sem_Gy_per_history": 8.443634761873093e-18,
-    "rel_err": 0.005010719817943786
+    "mean_Gy_per_history": 1.6952265246456253e-15,
+    "sem_Gy_per_history": 8.567388155061468e-18,
+    "rel_err": 0.005053830877765683
   },
   "lat_10cm_x-2--1": {
     "lo_cm": [
@@ -603,9 +603,9 @@
       10.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 1.7642860904107609e-15,
-    "sem_Gy_per_history": 8.66803864245196e-18,
-    "rel_err": 0.004913057292445052
+    "mean_Gy_per_history": 1.7498144153200595e-15,
+    "sem_Gy_per_history": 8.698414691797486e-18,
+    "rel_err": 0.0049710498528533695
   },
   "lat_10cm_x-1-0": {
     "lo_cm": [
@@ -619,9 +619,9 @@
       10.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 1.791758598886743e-15,
-    "sem_Gy_per_history": 8.770007801595988e-18,
-    "rel_err": 0.0048946369265619695
+    "mean_Gy_per_history": 1.781280926689406e-15,
+    "sem_Gy_per_history": 8.802487970978983e-18,
+    "rel_err": 0.004941661833958342
   },
   "lat_10cm_x0-1": {
     "lo_cm": [
@@ -635,9 +635,9 @@
       10.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 1.7837155177197515e-15,
-    "sem_Gy_per_history": 8.749953998833239e-18,
-    "rel_err": 0.004905464975726016
+    "mean_Gy_per_history": 1.7854511932641507e-15,
+    "sem_Gy_per_history": 8.798894164252425e-18,
+    "rel_err": 0.004928106798688987
   },
   "lat_10cm_x1-2": {
     "lo_cm": [
@@ -651,9 +651,9 @@
       10.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 1.760788922044935e-15,
-    "sem_Gy_per_history": 8.661043754441933e-18,
-    "rel_err": 0.004918842710790808
+    "mean_Gy_per_history": 1.7400816992858897e-15,
+    "sem_Gy_per_history": 8.655471046210233e-18,
+    "rel_err": 0.004974175091757096
   },
   "lat_10cm_x2-3": {
     "lo_cm": [
@@ -667,9 +667,9 @@
       10.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 1.7093777030704985e-15,
-    "sem_Gy_per_history": 8.515538796172186e-18,
-    "rel_err": 0.004981660156720195
+    "mean_Gy_per_history": 1.6890673574517834e-15,
+    "sem_Gy_per_history": 8.519164365340845e-18,
+    "rel_err": 0.005043709078715078
   },
   "lat_10cm_x3-4": {
     "lo_cm": [
@@ -683,9 +683,9 @@
       10.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 1.597464022215365e-15,
-    "sem_Gy_per_history": 8.245400072003155e-18,
-    "rel_err": 0.005161556039658674
+    "mean_Gy_per_history": 1.5867534303238157e-15,
+    "sem_Gy_per_history": 8.277457454685985e-18,
+    "rel_err": 0.005216599691230393
   },
   "lat_10cm_x4-5": {
     "lo_cm": [
@@ -699,9 +699,9 @@
       10.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 1.4322766264414389e-15,
-    "sem_Gy_per_history": 7.793176327171399e-18,
-    "rel_err": 0.005441111153600213
+    "mean_Gy_per_history": 1.394559299553777e-15,
+    "sem_Gy_per_history": 7.713865457463173e-18,
+    "rel_err": 0.005531400106063192
   },
   "lat_10cm_x5-6": {
     "lo_cm": [
@@ -715,9 +715,9 @@
       10.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 7.184223368128974e-16,
-    "sem_Gy_per_history": 5.82699050800187e-18,
-    "rel_err": 0.008110814780414357
+    "mean_Gy_per_history": 7.17460879733515e-16,
+    "sem_Gy_per_history": 5.8895590546446944e-18,
+    "rel_err": 0.008208892249055086
   },
   "lat_10cm_x6-7": {
     "lo_cm": [
@@ -731,9 +731,9 @@
       10.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 5.452185153147978e-16,
-    "sem_Gy_per_history": 5.105874589365867e-18,
-    "rel_err": 0.009364822444479608
+    "mean_Gy_per_history": 5.364157288447289e-16,
+    "sem_Gy_per_history": 5.13954506914748e-18,
+    "rel_err": 0.0095812721230536
   },
   "lat_10cm_x7-8": {
     "lo_cm": [
@@ -747,8 +747,8 @@
       10.0
     ],
     "mass_g": 2.0,
-    "mean_Gy_per_history": 4.1103441243037675e-16,
-    "sem_Gy_per_history": 4.4580636362217856e-18,
-    "rel_err": 0.010845962044545155
+    "mean_Gy_per_history": 4.089192692938633e-16,
+    "sem_Gy_per_history": 4.526669813401967e-18,
+    "rel_err": 0.011069837381884167
   }
 }

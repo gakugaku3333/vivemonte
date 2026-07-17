@@ -8,7 +8,7 @@ Woodcock delta-trackingの仮想衝突は不要（空気の広い空間で無駄
 周辺の責務は分離してある:
 - スペクトル生成（SpekPy/Kramers・ヒール軸外スペクトル）: chatcarlo/spectrum.py
 - 線源サンプリング・mAs光子数校正: chatcarlo/source.py
-- 相互作用の角度・エネルギー抽選（KN/レイリー）: chatcarlo/physics.py
+- 相互作用の角度・エネルギー抽選（束縛コンプトン/レイリー）: chatcarlo/physics.py
 - 軌跡記録（trace用）: chatcarlo/trajectory.py
 - 線量マップ換算・非物理的最大値の警告: chatcarlo/diagnostics.py
 """
@@ -22,7 +22,7 @@ from .dose_coefficients import h_star_10_per_fluence
 from .geometry import Geometry
 from .materials import (density, linear_mu, material_groups, mu_en_rho,
                          mu_rho_parts)
-from .physics import (sample_klein_nishina, sample_rayleigh_cos_theta,
+from .physics import (sample_compton_bound, sample_rayleigh_cos_theta,
                        sample_rayleigh_element, scatter_direction)
 from .source import photon_count_through_field, sample_source_photons
 from .tally import VoxelGrid, accumulate_track_length
@@ -148,7 +148,7 @@ def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
             compt_idx = iidx[is_compt]
             if len(compt_idx) > 0:
                 e_c = e_i[is_compt]
-                eps, cos_theta = sample_klein_nishina(e_c, rng)
+                eps, cos_theta = sample_compton_bound(mat_i[is_compt], e_c, rng)
                 e_new = e_c * eps
                 _deposit(energy_deposited, mat_i[is_compt], e_c - e_new)
                 dirv[compt_idx] = scatter_direction(dirv[compt_idx], cos_theta, rng)
