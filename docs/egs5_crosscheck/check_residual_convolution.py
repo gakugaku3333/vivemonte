@@ -36,11 +36,21 @@ SEED = 7
 KEV_PER_G_TO_GY = 1.602176634e-13
 
 COL_HALF_CM = 1.0
+# PDD中心軸(深さ方向)ビン。vive-auditor所見1: これだけでは側方(OCR)ビンの
+# スペクトルを代表できない懸念があるため、側方ビンも別途タリーする(下記)。
 REPRESENTATIVE_BINS = [
     ("pdd_z0-1", 0.0, 1.0),
     ("pdd_z5-6", 5.0, 6.0),
     ("pdd_z10-11", 10.0, 11.0),
     ("pdd_z14-15", 14.0, 15.0),
+]
+# 側方プロファイル代表ビン(中心軸付近と視野端に近いビンで散乱スペクトルの
+# 違いを確認する)。(名前, z0, z1, x0, x1)。z0-1は表面近傍、z9-10は10cm深。
+LATERAL_REPRESENTATIVE_BINS = [
+    ("lat_shallow_x0-1", 0.0, 1.0, 0.0, 1.0),
+    ("lat_shallow_x-4-3", 0.0, 1.0, -4.0, -3.0),
+    ("lat_10cm_x0-1", 9.0, 10.0, 0.0, 1.0),
+    ("lat_10cm_x-4-3", 9.0, 10.0, -4.0, -3.0),
 ]
 
 EBIN_EDGES_KEV = np.arange(10.0, 60.001, 2.0)  # PEGS5 AP=10keVより下は対象外(除外分を別途報告)
@@ -89,10 +99,25 @@ def tally_kerma_spectra() -> dict[str, np.ndarray]:
         "name": "phantom", "shape": "box", "material": "water",
         "center": [0.0, 0.0, 10.0], "size_cm": [30.0, 30.0, 20.0],
     }])
+    all_names = [name for name, _, _ in REPRESENTATIVE_BINS] + \
+                [name for name, *_ in LATERAL_REPRESENTATIVE_BINS]
     rng = np.random.default_rng(SEED)
-    hist = {name: np.zeros(len(EBIN_CENTERS_KEV)) for name, _, _ in REPRESENTATIVE_BINS}
-    below_ap_sum = {name: 0.0 for name, _, _ in REPRESENTATIVE_BINS}
-    total_sum = {name: 0.0 for name, _, _ in REPRESENTATIVE_BINS}
+    hist = {name: np.zeros(len(EBIN_CENTERS_KEV)) for name in all_names}
+    below_ap_sum = {name: 0.0 for name in all_names}
+    total_sum = {name: 0.0 for name in all_names}
+
+    def _score(name, lo, hi, starts, ends, seg_energy, mu_en_linear):
+        overlap_cm = _segment_box_overlap_cm(starts, ends, lo, hi)
+        hit = overlap_cm > 0
+        if not np.any(hit):
+            return
+        contrib = overlap_cm[hit] * seg_energy[hit] * mu_en_linear[hit]
+        e_hit = seg_energy[hit]
+        total_sum[name] += contrib.sum()
+        below_ap_sum[name] += contrib[e_hit < EBIN_EDGES_KEV[0]].sum()
+        idx = np.digitize(e_hit, EBIN_EDGES_KEV) - 1
+        valid = (idx >= 0) & (idx < len(EBIN_CENTERS_KEV))
+        np.add.at(hist[name], idx[valid], contrib[valid])
 
     done = 0
     while done < N_SPECTRUM:
@@ -109,22 +134,16 @@ def tally_kerma_spectra() -> dict[str, np.ndarray]:
         for name, z0, z1 in REPRESENTATIVE_BINS:
             lo = np.array([-COL_HALF_CM, -COL_HALF_CM, z0])
             hi = np.array([COL_HALF_CM, COL_HALF_CM, z1])
-            overlap_cm = _segment_box_overlap_cm(starts, ends, lo, hi)
-            hit = overlap_cm > 0
-            if not np.any(hit):
-                continue
-            contrib = overlap_cm[hit] * seg_energy[hit] * mu_en_linear[hit]
-            e_hit = seg_energy[hit]
-            total_sum[name] += contrib.sum()
-            below_ap_sum[name] += contrib[e_hit < EBIN_EDGES_KEV[0]].sum()
-            idx = np.digitize(e_hit, EBIN_EDGES_KEV) - 1
-            valid = (idx >= 0) & (idx < len(EBIN_CENTERS_KEV))
-            np.add.at(hist[name], idx[valid], contrib[valid])
+            _score(name, lo, hi, starts, ends, seg_energy, mu_en_linear)
+        for name, z0, z1, x0, x1 in LATERAL_REPRESENTATIVE_BINS:
+            lo = np.array([x0, -COL_HALF_CM, z0])
+            hi = np.array([x1, COL_HALF_CM, z1])
+            _score(name, lo, hi, starts, ends, seg_energy, mu_en_linear)
 
         done += n
 
-    for name, _, _ in REPRESENTATIVE_BINS:
-        frac_below = below_ap_sum[name] / total_sum[name] * 100
+    for name in all_names:
+        frac_below = below_ap_sum[name] / total_sum[name] * 100 if total_sum[name] > 0 else float("nan")
         print(f"  [{name}] AP(10keV)未満の寄与割合(除外分): {frac_below:.3f}%")
 
     return hist
@@ -226,17 +245,26 @@ def main() -> None:
     grid = delta_pred_grid()
 
     print("\n畳み込み結果 Δ_pred_conv(bin) = Σ w(E)*Δ_pred(E) / Σ w(E):")
-    print(f"  {'ビン':>14s}  {'Δ(t_KN,XAAMDI補間分母)':>24s}  {'Δ(t_Sq,XAAMDI補間分母)':>24s}  "
+    print(f"  {'ビン':>18s}  {'Δ(t_KN,XAAMDI補間分母)':>24s}  {'Δ(t_Sq,XAAMDI補間分母)':>24s}  "
           f"{'Δ(t_KN,第一原理分母)':>22s}")
     conv_results = {}
-    for name, _, _ in REPRESENTATIVE_BINS:
+    all_bin_names = [name for name, _, _ in REPRESENTATIVE_BINS] + \
+                     [name for name, *_ in LATERAL_REPRESENTATIVE_BINS]
+    for name in all_bin_names:
         w = hist[name]
         wsum = w.sum()
         conv_kn = float((w * grid["delta_kn"]).sum() / wsum)
         conv_sq = float((w * grid["delta_sq"]).sum() / wsum)
         conv_kn_fp = float((w * grid["delta_kn_firstprin"]).sum() / wsum)
         conv_results[name] = (conv_kn, conv_sq, conv_kn_fp)
-        print(f"  {name:>14s}  {conv_kn:23.3f}%  {conv_sq:23.3f}%  {conv_kn_fp:21.3f}%")
+        tag = "" if name.startswith("pdd_") else "  [側方]"
+        print(f"  {name:>18s}  {conv_kn:23.3f}%  {conv_sq:23.3f}%  {conv_kn_fp:21.3f}%{tag}")
+
+    pdd_sq = [conv_results[n][1] for n, _, _ in REPRESENTATIVE_BINS]
+    lat_sq = [conv_results[n][1] for n, *_ in LATERAL_REPRESENTATIVE_BINS]
+    print(f"\nPDDビン Δ(t_Sq)平均: {sum(pdd_sq)/len(pdd_sq):+.3f}%  "
+          f"側方ビン Δ(t_Sq)平均: {sum(lat_sq)/len(lat_sq):+.3f}%  "
+          f"(vive-auditor所見1への対応: 側方ビンでの検算)")
 
     print("\n(参考)単一エネルギー60keV一次成分のみのΔ_pred "
           "(check_compton_transfer.py既報値): t_KN=-1.095%, t_Sq=+0.179%")

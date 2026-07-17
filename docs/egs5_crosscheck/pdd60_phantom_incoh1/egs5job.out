@@ -1,0 +1,79 @@
+ PEGS5-call comes next
+
+
+ inseed=           1      (seed for generating unique sequences of Ranlux)
+ ranlux luxury level set by rluxgo : 1     p=  48
+ ranlux initialized by rluxgo from seed           1
+
+ Start pdd60_phantom_incoh1
+ Call hatch to get cross-section data
+
+ HATCH-call comes next
+
+ RAYLEIGH OPTION REQUESTED FOR MEDIUM NUMBER  1
+
+ INCOHERENT OPTION REQUESTED FOR MEDIUM NUMBER  1
+
+ EGS SUCCESSFULLY 'HATCHED' FOR ONE MEDIUM.
+
+ incohr(2)= 1 iprofr(2)= 0  (confirmation, cf. tutor7.f line 298-299)
+
+ Knock-on electrons can be created and any electron followed down to
+                                          0.010 MeV kinetic energy
+ Brem photons can be created and any photon followed down to
+                                          0.010 MeV
+
+ PDD + lateral profile run (30x30x20 cm water, 47 analytic bins)
+ ncase= 100000000
+
+ Sanity check: mean total energy deposited anywhere in phantom (MeV) =  0.37700334E-01
+ SEM (MeV)                                          =  0.24382060E-05
+ Relative SEM (%)                                   =    0.0065
+
+ pdd_z0-1                 mean(MeV)=  0.119472E-03 sem(MeV)=  0.202315E-06 relerr(%)=   0.1693
+ pdd_z1-2                 mean(MeV)=  0.118861E-03 sem(MeV)=  0.202060E-06 relerr(%)=   0.1700
+ pdd_z2-3                 mean(MeV)=  0.111220E-03 sem(MeV)=  0.195412E-06 relerr(%)=   0.1757
+ pdd_z3-4                 mean(MeV)=  0.101107E-03 sem(MeV)=  0.186246E-06 relerr(%)=   0.1842
+ pdd_z4-5                 mean(MeV)=  0.906211E-04 sem(MeV)=  0.176500E-06 relerr(%)=   0.1948
+ pdd_z5-6                 mean(MeV)=  0.797548E-04 sem(MeV)=  0.165487E-06 relerr(%)=   0.2075
+ pdd_z6-7                 mean(MeV)=  0.696135E-04 sem(MeV)=  0.154438E-06 relerr(%)=   0.2219
+ pdd_z7-8                 mean(MeV)=  0.604262E-04 sem(MeV)=  0.143930E-06 relerr(%)=   0.2382
+ pdd_z8-9                 mean(MeV)=  0.520551E-04 sem(MeV)=  0.133561E-06 relerr(%)=   0.2566
+ pdd_z9-10                mean(MeV)=  0.444447E-04 sem(MeV)=  0.123360E-06 relerr(%)=   0.2776
+ pdd_z10-11               mean(MeV)=  0.379147E-04 sem(MeV)=  0.113806E-06 relerr(%)=   0.3002
+ pdd_z11-12               mean(MeV)=  0.322931E-04 sem(MeV)=  0.105068E-06 relerr(%)=   0.3254
+ pdd_z12-13               mean(MeV)=  0.273085E-04 sem(MeV)=  0.966292E-07 relerr(%)=   0.3538
+ pdd_z13-14               mean(MeV)=  0.230419E-04 sem(MeV)=  0.888736E-07 relerr(%)=   0.3857
+ pdd_z14-15               mean(MeV)=  0.193745E-04 sem(MeV)=  0.814997E-07 relerr(%)=   0.4207
+ lat_shallow_x-8--7       mean(MeV)=  0.443373E-05 sem(MeV)=  0.389890E-07 relerr(%)=   0.8794
+ lat_shallow_x-7--6       mean(MeV)=  0.643225E-05 sem(MeV)=  0.470505E-07 relerr(%)=   0.7315
+ lat_shallow_x-6--5       mean(MeV)=  0.101892E-04 sem(MeV)=  0.594326E-07 relerr(%)=   0.5833
+ lat_shallow_x-5--4       mean(MeV)=  0.527694E-04 sem(MeV)=  0.133627E-06 relerr(%)=   0.2532
+ lat_shallow_x-4--3       mean(MeV)=  0.562675E-04 sem(MeV)=  0.138129E-06 relerr(%)=   0.2455
+ lat_shallow_x-3--2       mean(MeV)=  0.583053E-04 sem(MeV)=  0.140904E-06 relerr(%)=   0.2417
+ lat_shallow_x-2--1       mean(MeV)=  0.593398E-04 sem(MeV)=  0.142091E-06 relerr(%)=   0.2395
+ lat_shallow_x-1-0        mean(MeV)=  0.597310E-04 sem(MeV)=  0.142473E-06 relerr(%)=   0.2385
+ lat_shallow_x0-1         mean(MeV)=  0.597407E-04 sem(MeV)=  0.142677E-06 relerr(%)=   0.2388
+ lat_shallow_x1-2         mean(MeV)=  0.589137E-04 sem(MeV)=  0.141187E-06 relerr(%)=   0.2397
+ lat_shallow_x2-3         mean(MeV)=  0.585333E-04 sem(MeV)=  0.141175E-06 relerr(%)=   0.2412
+ lat_shallow_x3-4         mean(MeV)=  0.563334E-04 sem(MeV)=  0.138464E-06 relerr(%)=   0.2458
+ lat_shallow_x4-5         mean(MeV)=  0.527487E-04 sem(MeV)=  0.133787E-06 relerr(%)=   0.2536
+ lat_shallow_x5-6         mean(MeV)=  0.100773E-04 sem(MeV)=  0.590088E-07 relerr(%)=   0.5856
+ lat_shallow_x6-7         mean(MeV)=  0.642088E-05 sem(MeV)=  0.470493E-07 relerr(%)=   0.7328
+ lat_shallow_x7-8         mean(MeV)=  0.448410E-05 sem(MeV)=  0.392844E-07 relerr(%)=   0.8761
+ lat_10cm_x-8--7          mean(MeV)=  0.516576E-05 sem(MeV)=  0.417461E-07 relerr(%)=   0.8081
+ lat_10cm_x-7--6          mean(MeV)=  0.668991E-05 sem(MeV)=  0.476009E-07 relerr(%)=   0.7115
+ lat_10cm_x-6--5          mean(MeV)=  0.895430E-05 sem(MeV)=  0.551055E-07 relerr(%)=   0.6154
+ lat_10cm_x-5--4          mean(MeV)=  0.176547E-04 sem(MeV)=  0.773775E-07 relerr(%)=   0.4383
+ lat_10cm_x-4--3          mean(MeV)=  0.197133E-04 sem(MeV)=  0.817134E-07 relerr(%)=   0.4145
+ lat_10cm_x-3--2          mean(MeV)=  0.211275E-04 sem(MeV)=  0.847076E-07 relerr(%)=   0.4009
+ lat_10cm_x-2--1          mean(MeV)=  0.218403E-04 sem(MeV)=  0.860320E-07 relerr(%)=   0.3939
+ lat_10cm_x-1-0           mean(MeV)=  0.222838E-04 sem(MeV)=  0.870733E-07 relerr(%)=   0.3907
+ lat_10cm_x0-1            mean(MeV)=  0.221609E-04 sem(MeV)=  0.866756E-07 relerr(%)=   0.3911
+ lat_10cm_x1-2            mean(MeV)=  0.218852E-04 sem(MeV)=  0.861197E-07 relerr(%)=   0.3935
+ lat_10cm_x2-3            mean(MeV)=  0.210865E-04 sem(MeV)=  0.846600E-07 relerr(%)=   0.4015
+ lat_10cm_x3-4            mean(MeV)=  0.196448E-04 sem(MeV)=  0.815754E-07 relerr(%)=   0.4153
+ lat_10cm_x4-5            mean(MeV)=  0.177984E-04 sem(MeV)=  0.778599E-07 relerr(%)=   0.4375
+ lat_10cm_x5-6            mean(MeV)=  0.908289E-05 sem(MeV)=  0.556976E-07 relerr(%)=   0.6132
+ lat_10cm_x6-7            mean(MeV)=  0.667126E-05 sem(MeV)=  0.475390E-07 relerr(%)=   0.7126
+ lat_10cm_x7-8            mean(MeV)=  0.512840E-05 sem(MeV)=  0.416727E-07 relerr(%)=   0.8126
