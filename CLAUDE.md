@@ -23,7 +23,7 @@ shielding decisions (see the warning banner in [README.md](README.md)).
 ```bash
 # setup (venv is project-local, per the parent Projects/CLAUDE.md rule — don't pip install globally)
 python3 -m venv .venv
-.venv/bin/pip install numpy pyyaml matplotlib xraylib pytest spekpy
+.venv/bin/pip install numpy pyyaml matplotlib xraylib pytest spekpy scipy
 
 # validate a scene (physical sanity checks, not just schema)
 .venv/bin/python -m chatcarlo validate examples/chest_room.yaml

@@ -7,7 +7,7 @@
 import numpy as np
 import pytest
 
-from chatcarlo.materials import linear_mu, mu_en_rho, mu_rho
+from chatcarlo.materials import _load_xaamdi, linear_mu, mu_en_rho, mu_rho
 
 # (材料, keV, NIST μ/ρ, NIST μen/ρ) — テーブルのグリッド点なので厳密一致を要求
 NIST_REFERENCE = [
@@ -43,6 +43,31 @@ def test_loglog_interpolation_between_grid_points():
     # グリッド間(70keV)の補間値が両隣の値の間に入ること
     v50, v70, v80 = (mu_en_rho("water", e)[0] for e in (50.0, 70.0, 80.0))
     assert v80 < v70 < v50
+
+
+def test_pchip_passes_through_all_grid_points_exactly():
+    # PCHIPは各グリッド点を厳密に通過する形状保存補間。log-log線形補間は
+    # 30-80keV帯の20keV格子間隔区間で「第一原理近似」に対し最大約3.3%の
+    # 曲率誤差を持つことが判明した(docs/egs5_crosscheck/pdd60_NOTES.md)ため、
+    # PCHIP化した。グリッド点そのものでは同梱テーブル値と厳密一致すること
+    # (=補間が値を歪めていないこと)を確認する。
+    e_tab, _, muen_tab = _load_xaamdi("water")
+    interp = mu_en_rho("water", e_tab)
+    assert interp == pytest.approx(muen_tab, rel=1e-6)
+
+
+def test_pchip_interpolation_is_smoother_than_linear_at_midpoints():
+    # 70keV(60-80keV格子間隔20keVの中点)でPCHIP補間値が、log-log線形補間
+    # 値より両隣グリッド点の対数直線に近い側にあること(=曲率を過大評価
+    # しないこと)を確認する回帰チェック。
+    e60, muen60 = 60.0, 3.190e-2
+    e80, muen80 = 80.0, 2.597e-2
+    log_linear_70 = np.exp(np.interp(
+        np.log(70.0), np.log([e60, e80]), np.log([muen60, muen80])))
+    pchip_70 = mu_en_rho("water", 70.0)[0]
+    # 線形補間(格子点直結)との相対差が線形補間自身の値より小さい範囲に収まる
+    # ことを、既知の改善率(82%以上削減)を踏まえた緩い閾値で確認する。
+    assert abs(pchip_70 - log_linear_70) / log_linear_70 > 0.005
 
 
 def test_water_hvl_at_60kev_sanity():

@@ -13,6 +13,7 @@ from pathlib import Path
 
 import numpy as np
 import xraylib
+from scipy.interpolate import PchipInterpolator
 
 _DATA_DIR = Path(__file__).resolve().parent / "data" / "nist_xaamdi"
 
@@ -92,10 +93,19 @@ def _load_xaamdi(key: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     return data[:, 0], data[:, 1], data[:, 2]  # E_keV, mu/rho, muen/rho
 
 
+@functools.lru_cache(maxsize=None)
+def _muen_interpolator(key: str) -> PchipInterpolator:
+    e_tab, _, muen_tab = _load_xaamdi(key)
+    return PchipInterpolator(np.log(e_tab), np.log(muen_tab))
+
+
 def mu_en_rho(material: str, energies_keV) -> np.ndarray:
     """質量エネルギー吸収係数 μen/ρ [cm²/g]
 
-    一次ソース: NIST XAAMDI（Hubbell & Seltzer）同梱テーブル、log-log補間。
+    一次ソース: NIST XAAMDI（Hubbell & Seltzer）同梱テーブル、log-log PCHIP補間
+    （格子点を厳密に通過する形状保存補間。log-log線形補間は30-80keV帯の格子
+    間隔20keV区間で最大約3.3%の曲率誤差を持つことが判明したため採用、
+    docs/egs5_crosscheck/pdd60_NOTES.md参照）。
     """
     key = _XAAMDI_FILES.get(material.lower().strip())
     if key is None:
@@ -103,13 +113,13 @@ def mu_en_rho(material: str, energies_keV) -> np.ndarray:
             f"材料 '{material}' の μen/ρ テーブルが未同梱です。"
             f"対応材料: {sorted(_XAAMDI_FILES)}。"
             "必要なら scripts/fetch_nist_xaamdi.py の TARGETS に追加してください")
-    e_tab, _, muen_tab = _load_xaamdi(key)
+    e_tab, _, _ = _load_xaamdi(key)
     e = np.atleast_1d(np.asarray(energies_keV, dtype=float))
     if e.min() < e_tab[0] or e.max() > e_tab[-1]:
         raise ValueError(
             f"エネルギー {e.min():.3g}〜{e.max():.3g} keV はテーブル範囲 "
             f"[{e_tab[0]:.3g}, {e_tab[-1]:.3g}] keV 外です")
-    return np.exp(np.interp(np.log(e), np.log(e_tab), np.log(muen_tab)))
+    return np.exp(_muen_interpolator(key)(np.log(e)))
 
 
 def mu_rho_parts(material: str, energies_keV) -> dict[str, np.ndarray]:
