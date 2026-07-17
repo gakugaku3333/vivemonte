@@ -1,0 +1,27 @@
+ PEGS5-call comes next
+
+
+ inseed=           6      (seed for generating unique sequences of Ranlux)
+ ranlux luxury level set by rluxgo : 1     p=  48
+ ranlux initialized by rluxgo from seed           6
+
+ Start bsf60_thinslab
+ Call hatch to get cross-section data
+
+ HATCH-call comes next
+
+ RAYLEIGH OPTION REQUESTED FOR MEDIUM NUMBER  1
+
+ EGS SUCCESSFULLY 'HATCHED' FOR ONE MEDIUM.
+
+ Knock-on electrons can be created and any electron followed down to
+                                          0.010 MeV kinetic energy
+ Brem photons can be created and any photon followed down to
+                                          0.010 MeV
+
+ Thin-slab run (30x30x0.2 cm water ONLY, no bulk)
+ ncase=   8000000
+ Mean energy deposited per history in scored volume (MeV) =  0.39273216E-03
+ Standard error of the mean (MeV)          =  0.12744002E-05
+ Relative standard error (%)                =    0.3245
+

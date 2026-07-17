@@ -1,0 +1,10 @@
+エネルギー=60.0 keV, 照射野=10.0x10.0 cm^2 (平行ビーム近似), スコア層厚=0.2 cm, n=500000/ラン, seed=1
+density(water)=1.0000 g/cm^3
+
+[水薄層のみ(分母)] mean=3.989707e-01 keV/history  SEM=3.536290e-04 keV/history  relSEM=0.0886%
+[ファントム表面層(分子)] mean=5.420231e-01 keV/history  SEM=7.270686e-04 keV/history  relSEM=0.1341%
+
+スコア層体積=20.0 cm^3  質量(water)=20.0000 g
+質量あたりカーマ: 水薄層のみ=1.994854e-02 keV/g/history  ファントム表面層=2.710116e-02 keV/g/history
+
+BSF_w (ChatCarlo) = 1.3586 ± 0.0022  (1sigma, 相対0.161%)
