@@ -23,8 +23,44 @@ tools: Read, Glob, Grep, Bash, Write, Edit
   ⚠️ 新しいマシン・再展開時はこの3点を再設定すること。`-std=legacy
   -fallow-argument-mismatch` がないと、モダンgfortranはEGS5のF77暗黙インター
   フェース（`cprfil`/`alin`/`QFIT`等の関数/サブルーチン不一致）をエラーにする。
-- **リファレンス文書**: `$EGS5/slac730.pdf`（EGS5マニュアル SLAC-R-730）、
-  `$EGS5/docs/`。仕様が不確かなときは記憶で書かず、まずここを読む。
+- **リファレンス文書**: 公式マニュアル一式は`egs5.241010.tar.gz`展開時に
+  同梱済み（追加ダウンロード不要）。**仕様が不確かなときは記憶で書かず、必ず
+  ここを読む。** ファイル一覧・使い分け・トピック索引は下記「公式ドキュメント
+  索引」を参照。
+
+### 公式ドキュメント索引
+
+すべて`$EGS5/`以下（third-partyにつきgitignore対象。読むだけで編集・コミットしない）。
+
+| ファイル | 内容 | 使いどころ |
+|---|---|---|
+| `$EGS5/slac730.pdf`（457p） | 本体マニュアル一式（SLAC-R-730/KEK 2005-8）。物理理論(Ch.2)＋チュートリアル1-8のウォークスルー(Ch.3)＋応用ユーザーコード(Ch.4)＋Appendix A-Eに下記4冊を統合収録 | 物理モデルの詳細確認、tutorcodes各例の解説文 |
+| `$EGS5/docs/egs5_user_manual.pdf`（41p、slac730 Appendix B） | user code MAINの9ステップ（PEGS5呼び出し→HATCH→HOWFAR/AUSGAB初期化→SHOWER）、COMMON変数一覧(B.3、Table B.1-B.17)、HOWFAR/AUSGAB仕様(B.5-B.6) | MAINの書き方・COMMON変数の意味を調べる時 |
+| `$EGS5/docs/pegs_user_manual.pdf`（38p、slac730 Appendix C） | PEGS5入力オプション全種（ELEM/MIXT/COMP §C.3.2, ENER §C.3.3, PWLF §C.3.4, DECK §C.3.5, TEST/CALL/PLTI/PLTN/HPLT §C.3.6-9） | `.inp`ファイルの構文を確認する時（IBOUND等のフラグの正確な意味はここ） |
+| `$EGS5/docs/Writing_HOWFAR.pdf`（31p、W.R. Nelson講義資料） | HOWFARの書き方に特化した実例集（平面・円柱・球などの境界判定コード） | ChatCarloのbox/cylinder/sphereに対応する幾何をHOWFARで書く時、`tutorcodes`だけでは幾何パターンが不足する時 |
+| `$EGS5/docs/installation_guide.pdf`（8p、slac730 Appendix D） | ビルド・`egs5run`スクリプトの使い方 | 新環境セットアップ時（このファイルの「環境」節が優先、これは背景説明用） |
+| `$EGS5/docs/distribution_contents.pdf`（10p、slac730 Appendix E） | 配布物のディレクトリ・ファイル一覧 | 「このデータファイルはどこ」を探す時 |
+| `$EGS5/egs5-log.txt` | 公式changelog（KEK公式サイトから取得済み、[rcwww.kek.jp/research/egs/egs5_source/egs5-log.txt](https://rcwww.kek.jp/research/egs/egs5_source/egs5-log.txt)） | バージョン差異の確認。**現在の導入版は1.0.8（2024.10.10）。** 1.0.9（2026.7.10、LPM物理・指数変換等追加）が公開されているが、公式ログに「ucsampl5.f出力に変更なし」と明記されており、診断X線エネルギー域（10〜150 keV、LPMは高エネルギー制動放射現象で無関係）では更新の実益がないため未導入。既存の検証済み結果との一貫性を優先し、明示的な指示がない限り1.0.8を維持する |
+
+**物理トピック早見（slac730.pdf、章番号で検索。ページ番号は版で前後するため
+`pdftotext $EGS5/slac730.pdf - | grep -n "見出し文字列"`で現物確認すること）**:
+
+| トピック | 章 |
+|---|---|
+| コンプトン散乱（Klein-Nishina、free electron） | §2.9 |
+| 束縛効果・Doppler broadening（IBOUND/INCOHが効く範囲） | §2.18 |
+| コヒーレント（レイリー）散乱 | §2.17 |
+| 光電効果 | §2.16 |
+| 偏光光子の散乱 | §2.19 |
+| tutor5（鉛筆ビーム・LATCH分類、water60.fの元ネタ） | §3.5 |
+| MAINの9ステップ・COMMON変数 | Appendix B（`egs5_user_manual.pdf`と同一） |
+| PEGS5入力オプション全種 | Appendix C（`pegs_user_manual.pdf`と同一） |
+
+**PDF検索の作法**: `pdftotext`（Homebrew poppler、インストール済み）で全文をテキスト化して
+`grep`する方が、ページを勘で開くより速く正確。例:
+```bash
+pdftotext $EGS5/docs/pegs_user_manual.pdf - | grep -n -A15 "IBOUND"
+```
 
 ## 実行手順（検証済みレシピ）
 
@@ -100,7 +136,7 @@ DECK
 
 ## 検証の作法（ChatCarloプロジェクトのルール）
 
-- 許容基準は**実行前に**文書化された値を使う（`docs/plan_phits_crosscheck.md`:
+- 許容基準は**実行前に**文書化された値を使う（`docs/plan_egs5_crosscheck.md`:
   一次透過率は2σかつ2%以内）。結果を見てから基準を緩めない。
 - 3者比較を基本形にする: 解析解（Beer-Lambert, xraylib μ）/ ChatCarlo MC /
   EGS5 MC。ChatCarlo側は `docs/egs5_crosscheck/run_chatcarlo_water60.py` が

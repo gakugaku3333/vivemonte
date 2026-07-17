@@ -1,6 +1,6 @@
 # EGS5相互検証結果（Phase 2a、後方散乱係数BSF、60 keV単色）
 
-作成日: 2026-07-15 / 更新: 2026-07-16。[plan_phits_crosscheck.md](../plan_phits_crosscheck.md)
+作成日: 2026-07-15 / 更新: 2026-07-16。[plan_egs5_crosscheck.md](../plan_egs5_crosscheck.md)
 Phase 2aの結果。EGS5側の詳細セットアップは[bsf60_NOTES.md](bsf60_NOTES.md)
 （egs5-operatorサブエージェント作成）、ChatCarlo側は
 [run_chatcarlo_bsf60.py](run_chatcarlo_bsf60.py)。

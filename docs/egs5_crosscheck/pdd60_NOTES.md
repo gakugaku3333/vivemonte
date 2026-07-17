@@ -5,7 +5,7 @@ ChatCarlo側結果との突合）。ChatCarlo側の実行スクリプトは
 `docs/egs5_crosscheck/run_chatcarlo_pdd60.py`（既存、`chatcarlo_pdd60_results.json` に
 n=5,000,000史の結果が保存済み）。
 
-**結論を先に書く: この比較は事前登録した合否基準（`docs/plan_phits_crosscheck.md`
+**結論を先に書く: この比較は事前登録した合否基準（`docs/plan_egs5_crosscheck.md`
 Phase 2の「統計誤差1%未満のビンに限定して2σかつ相対差2%以内」）に対して
 不合格（47ビン中37ビンが不合格、6ビンのみ合格、4ビンは統計誤差条件外）。
 EGS5がChatCarloより一貫して低く（全47ビンで同符号）、平均相対差−1.71%
@@ -141,7 +141,7 @@ x,y制限なし）でのエネルギー付与合計平均 = 3.7406×10⁻² MeV
 値をわずかに（0.1%）下げる方向に効くが、後述の−1.7%平均差の主因ではない
 （桁が違う）。
 
-判定基準: `docs/plan_phits_crosscheck.md`の事前登録基準「統計誤差1%未満の
+判定基準: `docs/plan_egs5_crosscheck.md`の事前登録基準「統計誤差1%未満の
 ビンに限定して2σかつ相対差2%以内」を適用。統計誤差はEGS5・ChatCarlo双方が
 1%未満のビンのみ判定対象とする（4ビンはChatCarlo側の統計誤差が1.08〜1.14%
 とわずかに1%を超えるため対象外）。

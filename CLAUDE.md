@@ -14,7 +14,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ChatCarlo is a Monte Carlo photon transport code for diagnostic X-ray energies (10–150 keV). Scenes are declared
 in `scene.yaml` — the system is designed for an AI (Claude Code) to write and iterate on scene files declaratively,
 then drive validation/preview/run non-interactively via the CLI. Current status is research/education only: doses
-and H*(10) must be cross-checked against an established code (PHITS) before being used for real patient-dose or
+and H*(10) must be cross-checked against an established code (EGS5 — PHITS was considered but was not adopted;
+see [docs/plan_egs5_crosscheck.md](docs/plan_egs5_crosscheck.md)) before being used for real patient-dose or
 shielding decisions (see the warning banner in [README.md](README.md)).
 
 ## Commands
