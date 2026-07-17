@@ -103,6 +103,7 @@ def cmd_run(args) -> int:
     print(f"吸収（光電）割合: {result.fraction_absorbed:.4f}")
     print(f"脱出割合: {result.fraction_escaped:.4f}")
     print(f"平均相互作用回数/光子: {result.mean_scatter_events:.4f}")
+    print(f"蛍光X線放出イベント数: {result.n_fluorescence:,}")
     print("材料別吸収エネルギー [MeV/history合計]:")
     for name, e_mev in sorted(result.energy_deposited_MeV.items(), key=lambda kv: -kv[1]):
         print(f"  {name}: {e_mev:.6g}")

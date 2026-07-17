@@ -22,7 +22,8 @@ from .dose_coefficients import h_star_10_per_fluence
 from .geometry import Geometry
 from .materials import (density, linear_mu, material_groups, mu_en_rho,
                          mu_rho_parts)
-from .physics import (sample_compton_bound, sample_rayleigh_cos_theta,
+from .physics import (isotropic_direction, sample_compton_bound,
+                       sample_fluorescence, sample_rayleigh_cos_theta,
                        sample_rayleigh_element, scatter_direction)
 from .source import photon_count_through_field, sample_source_photons
 from .tally import VoxelGrid, accumulate_track_length
@@ -65,17 +66,19 @@ def _interaction_probabilities(materials: np.ndarray, energies: np.ndarray):
 @dataclass
 class BatchResult:
     n_scatter: np.ndarray       # (N,) int — 相互作用回数（吸収前含む）
-    absorbed: np.ndarray        # (N,) bool — 光電吸収で消滅したか
+    absorbed: np.ndarray        # (N,) bool — 光電吸収で消滅したか（蛍光放出時はFalse）
     escaped: np.ndarray         # (N,) bool — 相互作用なしで世界境界を脱出したか
     final_energy: np.ndarray    # (N,) keV
     energy_deposited: dict = field(default_factory=dict)  # 材料名 -> keV
+    n_fluorescence: int = 0     # K殻蛍光X線を放出したイベント数
 
 
 def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
                        geometry: Geometry, rng: np.random.Generator,
                        grid: VoxelGrid | None = None,
                        recorder: TrajectoryRecorder | None = None,
-                       tally_rng: np.random.Generator | None = None) -> BatchResult:
+                       tally_rng: np.random.Generator | None = None,
+                       fluorescence_enabled: bool = True) -> BatchResult:
     """光源サンプリングとは独立な輸送カーネル本体（テストで直接叩ける）。
 
     pos/dirv/energy は呼び出し側の配列を破壊的に更新する。
@@ -86,6 +89,11 @@ def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
     相互作用サンプリング）は同一seedならビット一致のまま変わらない。
     recorder を渡すと、各飛行区間を可視化用に記録する（既定Noneで無効、
     乱数を一切消費しないため同一seedでの輸送結果に影響しない）。
+    fluorescence_enabled=True（既定）では光電吸収イベントでK殻蛍光X線の
+    放出を抽選し（chatcarlo/physics.py の `sample_fluorescence`）、放出時は
+    光子を消滅させず蛍光線エネルギー・等方方向で輸送を継続する
+    （docs/plan_fluorescence.md参照）。Falseなら従来どおり全量その場で
+    局所吸収する。
     """
     if grid is not None and tally_rng is None:
         tally_rng = rng.spawn(1)[0]
@@ -96,6 +104,7 @@ def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
     absorbed = np.zeros(n, dtype=bool)
     escaped = np.zeros(n, dtype=bool)
     energy_deposited: dict = {}
+    n_fluorescence = 0
 
     while np.any(alive):
         idx = np.where(alive)[0]
@@ -139,11 +148,32 @@ def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
             is_rayl = (~is_photo) & (~is_compt)
 
             photo_idx = iidx[is_photo]
+            is_fluor = np.zeros(len(iidx), dtype=bool)  # is_photoと同じ形（recorder用）
             if len(photo_idx) > 0:
-                _deposit(energy_deposited, mat_i[is_photo], e_i[is_photo])
-                alive[photo_idx] = False
-                absorbed[photo_idx] = True
+                mat_p = mat_i[is_photo]
+                e_p = e_i[is_photo]
+                if fluorescence_enabled:
+                    emit, e_line = sample_fluorescence(mat_p, e_p, rng)
+                else:
+                    emit = np.zeros(len(photo_idx), dtype=bool)
+                    e_line = np.zeros(len(photo_idx))
+
+                _deposit(energy_deposited, mat_p, np.where(emit, e_p - e_line, e_p))
                 n_scatter[photo_idx] += 1
+
+                no_emit = photo_idx[~emit]
+                alive[no_emit] = False
+                absorbed[no_emit] = True
+
+                emit_idx = photo_idx[emit]
+                if len(emit_idx) > 0:
+                    n_fluorescence += len(emit_idx)
+                    energy[emit_idx] = e_line[emit]
+                    dirv[emit_idx] = isotropic_direction(len(emit_idx), rng)
+                    tau[emit_idx] = -np.log(rng.random(len(emit_idx)))
+
+                photo_positions = np.where(is_photo)[0]
+                is_fluor[photo_positions] = emit
 
             compt_idx = iidx[is_compt]
             if len(compt_idx) > 0:
@@ -169,13 +199,16 @@ def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
             event[noninteract & escape] = "escape"
             if len(iidx) > 0:
                 interact_positions = np.where(interact)[0]
-                event[interact_positions[is_photo]] = "photoelectric"
+                photo_positions_full = interact_positions[is_photo]
+                event[photo_positions_full] = "photoelectric"
+                event[photo_positions_full[is_fluor[is_photo]]] = "fluorescence"
                 event[interact_positions[is_compt]] = "compton"
                 event[interact_positions[is_rayl]] = "rayleigh"
             recorder.record(idx, o, ends, e, event)
 
     return BatchResult(n_scatter=n_scatter, absorbed=absorbed, escaped=escaped,
-                        final_energy=energy, energy_deposited=energy_deposited)
+                        final_energy=energy, energy_deposited=energy_deposited,
+                        n_fluorescence=n_fluorescence)
 
 
 @dataclass
@@ -189,6 +222,7 @@ class TransportResult:
     # 絶対値換算係数（per-history値×これ=実線量）。mas指定時は照射野を通過する
     # 実光子数、ctdi_vol_mGy指定時はCTDIファントム校正による実効光子数。
     n_photons_real: float | None = None
+    n_fluorescence: int = 0
 
 
 def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
@@ -198,19 +232,23 @@ def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
     src = scene.raw["source"]
     geometry = Geometry(scene.raw["geometry"])
     grid = VoxelGrid.from_bbox(geometry.bbox_min, geometry.bbox_max, grid_resolution_cm) if dose_grid else None
+    fluorescence_enabled = scene.raw.get("physics", {}).get("fluorescence", True)
 
     energy_deposited: dict = {}
     n_absorbed = 0
     n_escaped = 0
     scatter_sum = 0
+    n_fluorescence = 0
     remaining = n_histories
     while remaining > 0:
         n = min(batch_size, remaining)
         remaining -= n
         pos, dirv, energy = sample_source_photons(src, n, rng)
-        result = transport_photons(pos, dirv, energy, geometry, rng, grid=grid)
+        result = transport_photons(pos, dirv, energy, geometry, rng, grid=grid,
+                                    fluorescence_enabled=fluorescence_enabled)
         for name, e_keV in result.energy_deposited.items():
             energy_deposited[name] = energy_deposited.get(name, 0.0) + e_keV
+        n_fluorescence += result.n_fluorescence
         n_absorbed += int(np.sum(result.absorbed))
         n_escaped += int(np.sum(result.escaped))
         scatter_sum += int(np.sum(result.n_scatter))
@@ -233,4 +271,5 @@ def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
         mean_scatter_events=scatter_sum / n_histories,
         grid=grid,
         n_photons_real=n_photons_real,
+        n_fluorescence=n_fluorescence,
     )

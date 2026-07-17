@@ -19,7 +19,7 @@ class TrajectoryRecorder:
     リストとして貯め、trajectories_to_json() で光子ごとのポリラインにまとめる。
     event は区間の終端で起きたことを表す文字列:
       "boundary"（材料境界を通過して継続）, "photoelectric", "compton",
-      "rayleigh", "escape"
+      "rayleigh", "fluorescence"（K殻蛍光X線放出、光電の亜種）, "escape"
     """
     starts: list = field(default_factory=list)
     ends: list = field(default_factory=list)

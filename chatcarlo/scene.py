@@ -275,6 +275,21 @@ def validate_scene(raw: dict) -> Scene:
             if not (isinstance(g.get("radius_cm"), (int, float)) and g["radius_cm"] > 0):
                 errors.append(SceneError(f"{p}.radius_cm", "sphereには正の radius_cm が必要です"))
 
+    # ---- physics（省略可） ----
+    physics = raw.get("physics")
+    if physics is not None:
+        if not isinstance(physics, dict):
+            errors.append(SceneError("physics", "physics はマッピングで指定してください"))
+        else:
+            unknown = set(physics) - {"fluorescence"}
+            if unknown:
+                errors.append(SceneError("physics", f"未知のキー: {sorted(unknown)}"))
+            fluor = physics.get("fluorescence", True)
+            if not isinstance(fluor, bool):
+                errors.append(SceneError("physics.fluorescence", "fluorescence は true/false で指定してください"))
+            else:
+                physics["fluorescence"] = fluor
+
     # ---- 物理サニティチェック（警告） ----
     if scene.ok and src:
         pos = src["position"]

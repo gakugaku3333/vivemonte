@@ -84,9 +84,16 @@ then an additional S(Z,q)/Z rejection from the incoherent scattering function vi
 sampled by mass-fraction-weighted element pick, same pattern as Rayleigh, before the angular distribution) /
 Rayleigh (atomic form factor F(Z,q) via `xraylib.FF_Rayl`, compounds sampled by mass-fraction-weighted element
 pick before the angular distribution). Electron range is neglected (kerma approximation — local absorption at
-the interaction point).
+the interaction point), except that photoelectric absorption samples K-shell fluorescence emission
+(`sample_fluorescence` in [physics.py](chatcarlo/physics.py); K-shell only, no cascade/L-shell, line energies
+below 5 keV are absorbed locally instead of emitted) — when emitted, the photon continues transport at the
+fluorescence line energy with an isotropic direction rather than being annihilated. Controlled by
+`physics.fluorescence` in scene.yaml (default `true`); toggling it off reproduces the pre-fluorescence local-absorption
+behavior. See [docs/plan_fluorescence.md](docs/plan_fluorescence.md) for the design rationale and verification.
 [tests/test_transport.py](tests/test_transport.py) checks primary transmission against the analytic Beer-Lambert
-law (`exp(-μt)`).
+law (`exp(-μt)`); [tests/test_fluorescence.py](tests/test_fluorescence.py) checks K-edge data against xraylib,
+energy conservation with fluorescence on/off, and the emission rate against the analytic K-shell-fraction×ω_K
+expectation.
 
 **Dose/H*(10) tallying is a separate concern from transport.** [tally.py](chatcarlo/tally.py)'s `VoxelGrid` lays a
 uniform grid independently of the transport geometry, purely for scoring. Two independent estimators are
@@ -97,7 +104,12 @@ track-length integral by voxel volume (`VoxelGrid.h10_map_pSv`). `accumulate_tra
 segment into substeps and scores a **stratified random point within each substep** (not the substep midpoint) —
 this makes the spatial-binning step an unbiased estimator regardless of substep length, which matters when many
 segments start exactly on a voxel boundary (e.g. a `field.shape: parallel` beam entering a phantom face); see
-lessons_learned for the bug this replaced.
+lessons_learned for the bug this replaced. Before K-shell fluorescence was modeled, the two estimators disagreed
+by design in high-Z materials — the collision estimator deposited the full photoelectric energy locally while
+NIST μen/ρ (used by the track-length estimator) already subtracts the mean fluorescence escape fraction. Modeling
+fluorescence brought the two into much closer agreement for lead (spot-checked with a 100 keV beam into a thick
+lead slab: track-length/collision ratio improved from ~0.38 without fluorescence to ~0.92 with it — see
+[docs/plan_fluorescence.md](docs/plan_fluorescence.md) for the verification script and numbers).
 
 **Units and calibration**: relative output is `Gy/history` / `pSv/history`. When `scene.yaml`'s `source.mas` is
 set, `photon_count_through_field` (in source.py) uses SpekPy's absolute fluence to get the real photon count

@@ -192,6 +192,56 @@ def compton_element_weights(material: str, energies_keV) -> tuple[np.ndarray, np
     return zs, weighted / total
 
 
+def photo_element_weights(material: str, energies_keV) -> tuple[np.ndarray, np.ndarray]:
+    """材料内で光電相互作用がどの構成元素で起きたかの重み（蛍光X線サンプリング用）。
+
+    `compton_element_weights`/`rayleigh_element_weights`と同型。質量分率×
+    元素別光電断面積（xraylib.CS_Photo）で規格化する。
+    """
+    comp = element_composition(material)
+    zs = np.array([z for z, _ in comp])
+    fracs = np.array([f for _, f in comp])
+    e = np.atleast_1d(np.asarray(energies_keV, dtype=float))
+    cs = np.array([[xraylib.CS_Photo(int(z), ek) for ek in e] for z in zs])
+    weighted = fracs[:, None] * cs
+    total = weighted.sum(axis=0, keepdims=True)
+    total = np.where(total > 0, total, 1.0)
+    return zs, weighted / total
+
+
+@functools.lru_cache(maxsize=None)
+def fluorescence_k_data(z: int) -> tuple[float, float, np.ndarray, np.ndarray]:
+    """K殻蛍光データ（xraylib、EPDLベース）。
+
+    戻り値: (K吸収端 keV, K蛍光収率 ω_K, 線エネルギー配列 keV, 線発生確率配列)
+    線発生確率は有効な4線（Kα2/Kα1/Kβ1系列: KL2/KL3/KM2/KM3）のRadRateで
+    規格化した和=1の確率。線が存在しない（エラーまたは0を返す）場合はスキップし、
+    有効線が1本もなければ ω_K=0.0 として扱う（軽元素・K蛍光を実質無視できる場合）。
+    """
+    edge_keV = xraylib.EdgeEnergy(z, xraylib.K_SHELL)
+    lines = [xraylib.KL2_LINE, xraylib.KL3_LINE, xraylib.KM2_LINE, xraylib.KM3_LINE]
+    energies = []
+    rates = []
+    for line in lines:
+        try:
+            rate = xraylib.RadRate(z, line)
+            e_line = xraylib.LineEnergy(z, line)
+        except ValueError:
+            continue
+        if rate > 0 and e_line > 0:
+            energies.append(e_line)
+            rates.append(rate)
+    if not rates:
+        return edge_keV, 0.0, np.array([]), np.array([])
+    rates_arr = np.array(rates)
+    rates_arr = rates_arr / rates_arr.sum()
+    try:
+        omega_k = xraylib.FluorYield(z, xraylib.K_SHELL)
+    except ValueError:
+        omega_k = 0.0
+    return edge_keV, omega_k, np.array(energies), rates_arr
+
+
 @functools.lru_cache(maxsize=None)
 def incoherent_sq_table(z: int, q_max: float = 20.0, n: int = 2000) -> tuple[np.ndarray, np.ndarray]:
     """コンプトン散乱の非干渉性散乱関数 S(Z,q) を q∈[0, q_max] Å⁻¹ でテーブル化

@@ -347,6 +347,9 @@ function draw() {
           ctx.moveTo(p[0] - 3, p[1] - 3); ctx.lineTo(p[0] + 3, p[1] + 3);
           ctx.moveTo(p[0] - 3, p[1] + 3); ctx.lineTo(p[0] + 3, p[1] - 3);
           ctx.stroke();
+        } else if (ev === 'fluorescence') {
+          ctx.fillStyle = col;
+          ctx.fillRect(p[0] - 3, p[1] - 3, 6, 6);
         }
       }
     }
@@ -372,7 +375,7 @@ function draw() {
     (DATA.beam.sid != null ? ` @ SID ${DATA.beam.sid} cm）` : '、平行ビーム）');
   if (DATA.trajectories.length) {
     lg.innerHTML += '<br><br><b style="font-size:12px">軌跡（' + DATA.trajectories.length + '光子）</b><br>' +
-      '● 光電吸収　○ コンプトン　◇ レイリー　× 脱出<br>' +
+      '● 光電吸収　○ コンプトン　◇ レイリー　■ 蛍光X線放出　× 脱出<br>' +
       '色: 青=高エネルギー → 赤=低エネルギー';
   }
   if (DATA.warnings.length) {
