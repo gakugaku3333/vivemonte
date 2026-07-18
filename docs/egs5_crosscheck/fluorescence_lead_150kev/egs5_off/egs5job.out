@@ -1,0 +1,205 @@
+ PEGS5-call comes next
+
+
+ inseed=           1      (seed for generating unique sequences of Ranlux)
+ ranlux luxury level set by rluxgo : 1     p=  48
+ ranlux initialized by rluxgo from seed           1
+
+ Start fluor_off_pb150
+ Call hatch to get cross-section data
+
+ HATCH-call comes next
+
+ RAYLEIGH OPTION REQUESTED FOR MEDIUM NUMBER  1
+
+ INCOHERENT OPTION REQUESTED FOR MEDIUM NUMBER  1
+
+ EGS SUCCESSFULLY 'HATCHED' FOR ONE MEDIUM.
+
+ Knock-on electrons can be created and any electron followed down to
+                                          0.010 MeV kinetic energy
+ Brem photons can be created and any photon followed down to
+                                          0.001 MeV
+
+ For 150.0 keV photons incident on 0.135cm of Pb with PCUT=0.001 MeV
+
+ Transmitted primaries (true, never sca   4.560%  ave energy=   0.15000 MeV
+
+ Fraction Rayleigh scattering (non-fluo   0.758%  ave energy=   0.14871 MeV
+
+ Fraction Compton scattering only (non-   0.469%  ave energy=   0.11247 MeV
+
+ Fraction fluorescence/photoelectric-de   0.040%  ave energy=   0.05082 MeV
+
+
+ Total escaped-photon energy (MeV, both directions)=  0.851478E+04
+ Total escaped-photon count=     58269.0
+ TOTAL ENERGY TRANSMISSION FRACTION=  0.056765
+
+
+ Escaped photons in 72-86 keV band (count)=        67.0
+ FRACTION OF ESCAPED PHOTONS IN 72-86 keV BAND=  0.001150
+
+
+ Escaped-photon energy histogram (both directions), 1 keV bins:
+   bin-upper-edge(MeV)   counts
+    0.0010           0.0
+    0.0020           0.0
+    0.0030           1.0
+    0.0040           0.0
+    0.0050           0.0
+    0.0060           1.0
+    0.0070           1.0
+    0.0080           2.0
+    0.0090           5.0
+    0.0100           3.0
+    0.0110           5.0
+    0.0120           5.0
+    0.0130          11.0
+    0.0140           4.0
+    0.0150           2.0
+    0.0160           3.0
+    0.0170           2.0
+    0.0180           1.0
+    0.0190           3.0
+    0.0200           3.0
+    0.0210           5.0
+    0.0220           5.0
+    0.0230           4.0
+    0.0240           2.0
+    0.0250           4.0
+    0.0260           5.0
+    0.0270           4.0
+    0.0280           3.0
+    0.0290           1.0
+    0.0300           7.0
+    0.0310           4.0
+    0.0320           3.0
+    0.0330           3.0
+    0.0340           8.0
+    0.0350           1.0
+    0.0360           5.0
+    0.0370           6.0
+    0.0380           6.0
+    0.0390           7.0
+    0.0400           6.0
+    0.0410           4.0
+    0.0420           7.0
+    0.0430           7.0
+    0.0440          14.0
+    0.0450           9.0
+    0.0460           5.0
+    0.0470           4.0
+    0.0480           5.0
+    0.0490           6.0
+    0.0500           8.0
+    0.0510           8.0
+    0.0520           8.0
+    0.0530           4.0
+    0.0540           6.0
+    0.0550           4.0
+    0.0560           7.0
+    0.0570           5.0
+    0.0580           5.0
+    0.0590           3.0
+    0.0600           4.0
+    0.0610           3.0
+    0.0620           1.0
+    0.0630           6.0
+    0.0640           4.0
+    0.0650           9.0
+    0.0660           6.0
+    0.0670           5.0
+    0.0680           4.0
+    0.0690           3.0
+    0.0700           7.0
+    0.0710           7.0
+    0.0720           1.0
+    0.0730           5.0
+    0.0740           7.0
+    0.0750           4.0
+    0.0760           3.0
+    0.0770           4.0
+    0.0780           6.0
+    0.0790           7.0
+    0.0800           8.0
+    0.0810           7.0
+    0.0820           3.0
+    0.0830           1.0
+    0.0840           3.0
+    0.0850           3.0
+    0.0860           6.0
+    0.0870           9.0
+    0.0880          11.0
+    0.0890           4.0
+    0.0900           3.0
+    0.0910           6.0
+    0.0920           4.0
+    0.0930           4.0
+    0.0940           3.0
+    0.0950         186.0
+    0.0960         327.0
+    0.0970         316.0
+    0.0980         310.0
+    0.0990         280.0
+    0.1000         264.0
+    0.1010         226.0
+    0.1020         198.0
+    0.1030         175.0
+    0.1040         179.0
+    0.1050         142.0
+    0.1060         150.0
+    0.1070         124.0
+    0.1080         117.0
+    0.1090         103.0
+    0.1100          89.0
+    0.1110          87.0
+    0.1120          77.0
+    0.1130          41.0
+    0.1140          46.0
+    0.1150          25.0
+    0.1160          14.0
+    0.1170           4.0
+    0.1180           2.0
+    0.1190           4.0
+    0.1200           5.0
+    0.1210           7.0
+    0.1220           9.0
+    0.1230           9.0
+    0.1240          12.0
+    0.1250          15.0
+    0.1260          11.0
+    0.1270          15.0
+    0.1280          15.0
+    0.1290          15.0
+    0.1300          15.0
+    0.1310          22.0
+    0.1320          22.0
+    0.1330          27.0
+    0.1340          35.0
+    0.1350          37.0
+    0.1360          48.0
+    0.1370          48.0
+    0.1380          54.0
+    0.1390          65.0
+    0.1400          73.0
+    0.1410          67.0
+    0.1420          99.0
+    0.1430          91.0
+    0.1440         121.0
+    0.1450         109.0
+    0.1460         111.0
+    0.1470         114.0
+    0.1480         103.0
+    0.1490         105.0
+    0.1500       52873.0
+    0.1510           0.0
+    0.1520           0.0
+    0.1530           0.0
+    0.1540           0.0
+    0.1550           0.0
+    0.1560           0.0
+    0.1570           0.0
+    0.1580           0.0
+    0.1590           0.0
+    0.1600           0.0

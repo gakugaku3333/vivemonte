@@ -640,3 +640,55 @@ vive-auditorの独立監査で「この式でもegs5job.outのヒストグラム
   程度だったため、この問題は蛍光ON条件で初めて顕在化した。「今まで
   問題なかった近似だから今回も大丈夫」と判断せず、新しい物理過程を
   含む条件では毎回、近似の妥当性を疑うこと。
+
+## `Geometry`の既定bbox_margin_cm(50cm)がEGS5相互検証で低エネルギーの
+   隠れた空気減弱バイアスを生む（20/150 keV相互検証, 2026-07-18）
+
+`Geometry`は物体群のbboxに既定で全方向+50cmの余白（`bbox_margin_cm`）を
+取り、その余白の外縁を「世界境界＝脱出」とみなす（[geometry.py](../chatcarlo/geometry.py)）。
+物体の外側は`background`（既定`air`、真空ではない）なので、スラブを
+`transport_photons`に直接渡す相互検証スクリプト（`docs/egs5_crosscheck/`配下）
+でこの既定値をそのまま使うと、**光子はスラブを抜けた後もさらに約50cmの
+空気中を飛行してから初めて「脱出」と判定される**。EGS5の`tutor5`系
+ユーザーコードは通常スラブ外を真空とするため、この約50cm分の空気減弱は
+ChatCarlo側だけに乗る隠れたバイアスになる。
+
+**発覚の経緯**: 20 keV水スラブ透過率の相互検証（`water20kev/`）を
+既存の60 keV版（`docs/egs5_crosscheck/run_chatcarlo_water60.py`、線源を
+スラブ手前10cmに置き、bbox_marginは既定50cmのまま）と同じ書き方で作った
+ところ、Beer-Lambert解析解29.68%に対しChatCarlo MC実測が28.08%と、
+統計誤差(±0.06pp)の25σ相当という説明不能な乖離が出た。切り分けの結果、
+線源とスラブの間の空気（10cm）とスラブ脱出後から世界境界までの空気
+（既定bbox_marginにより約50cm）を合わせた「合計約60cmの空気路」による
+減弱（20 keVでは`exp(-mu_air×60cm)`で約5.5%）が原因と判明。この減弱を
+含めた解析解（`exp(-(mu_air×60 + mu_water×t))`）はMC実測と0.02pp差
+（統計誤差以内）で完全に一致した。
+
+**60 keV版は同じ問題を抱えていたが閾値内に埋もれていた**: 60 keVでは
+`mu_air×60cm`の減弱が約1.35%しかなく、事前基準（解析解-MC差は2%以内）に
+収まっていたため、`docs/egs5_crosscheck/RESULTS.md`のPhase 1では
+「解析解12.762% vs ChatCarlo MC 12.589%」の差（相対1.36%）が
+説明されないまま記録されていた。今回判明した空気路減弱がこの差の
+主要因である可能性が高い（Phase 1の合否判定自体は変わらないため
+遡って修正はしないが、この教訓として記録する）。100 keVの蛍光相互検証
+（`fluorescence_copper/`・`fluorescence/`・`fluorescence_tungsten/`）も
+線源ギャップ5cm＋既定bbox_margin 50cmで同様の構造を持ち、100 keVでの
+60cm空気路減弱は約1.1%——これも各RESULTS.mdのStep1相対差(0.19〜1%程度)に
+説明なく寄与していた可能性がある。
+
+**対応（次回のEGS5相互検証で必ず適用すること）**: スラブ単体の透過率・
+蛍光ピーク比較のようにEGS5側が真空境界を仮定する検証では、
+`Geometry(geoms, bbox_margin_cm=<小さい値>)`を明示指定し、線源も
+スラブ直近（数百μm〜数mm程度）に置いて、意図しない空気路を作らない。
+`docs/egs5_crosscheck/water20kev/run_chatcarlo_water20.py`・
+`water150kev/run_chatcarlo_water150.py`・
+`fluorescence_copper_20kev/run_chatcarlo_fluorescence.py`・
+`fluorescence_lead_150kev/run_chatcarlo_fluorescence.py`が
+`bbox_margin_cm=0.01`を使う実装例。
+
+**なぜ気づけたか**: 20 keVでは空気減弱が60 keV/100 keVよりずっと大きく
+（光電効果のE^-3則）、統計誤差に対して説明不能なほど大きな乖離として
+表面化したため。エネルギーを変えて同じ手法を再利用したことで、
+既存の手法に潜んでいた小さいバイアスが顕在化した——「今まで閾値内
+だったから問題ない」ではなく、パラメータ（エネルギー・幾何スケール）を
+変えるたびに、既存の近似・簡略化が引き続き妥当かを疑うこと。

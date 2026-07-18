@@ -1,0 +1,32 @@
+--- fluorescence=off ---
+  fluorescence_enabled: False
+  n_histories: 1000000
+  seed: 1
+  energy_keV: 150.0
+  thickness_cm: 0.135
+  linear_mu_per_cm: 22.865550806893953
+  n_fluorescence: 0
+  n_escaped: 58088
+  uncollided_transmission: 0.045707
+  uncollided_transmission_stderr: 0.00020884891704531293
+  transmitted_energy_fraction: 0.056862908914993106
+  transmitted_energy_fraction_stderr: 0.00022974750861755284
+  peak_band_fraction_of_escaped: 0.0005164577881834458
+--- fluorescence=on ---
+  fluorescence_enabled: True
+  n_histories: 1000000
+  seed: 1
+  energy_keV: 150.0
+  thickness_cm: 0.135
+  linear_mu_per_cm: 22.865550806893953
+  n_fluorescence: 728951
+  n_escaped: 179161
+  uncollided_transmission: 0.045707
+  uncollided_transmission_stderr: 0.00020884891704531293
+  transmitted_energy_fraction: 0.119055826180972
+  transmitted_energy_fraction_stderr: 0.00027189995347737294
+  peak_band_fraction_of_escaped: 0.6227638827646642
+
+Δ(透過エネルギー割合, ON-OFF) = 0.062193
+
+書き出し: docs/egs5_crosscheck/fluorescence_lead_150kev/chatcarlo_results.json

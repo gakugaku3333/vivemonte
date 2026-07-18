@@ -1,0 +1,32 @@
+--- fluorescence=off ---
+  fluorescence_enabled: False
+  n_histories: 1000000
+  seed: 1
+  energy_keV: 20.0
+  thickness_cm: 0.01
+  linear_mu_per_cm: 302.8452019884795
+  n_fluorescence: 0
+  n_escaped: 51645
+  uncollided_transmission: 0.048451
+  uncollided_transmission_stderr: 0.00021471725733857537
+  transmitted_energy_fraction: 0.05160792451109623
+  transmitted_energy_fraction_stderr: 0.00022115560235776713
+  peak_band_fraction_of_escaped: 0.0
+--- fluorescence=on ---
+  fluorescence_enabled: True
+  n_histories: 1000000
+  seed: 1
+  energy_keV: 20.0
+  thickness_cm: 0.01
+  linear_mu_per_cm: 302.8452019884795
+  n_fluorescence: 382175
+  n_escaped: 106335
+  uncollided_transmission: 0.048451
+  uncollided_transmission_stderr: 0.00021471725733857537
+  transmitted_energy_fraction: 0.07386775298754647
+  transmitted_energy_fraction_stderr: 0.00023483422088453325
+  peak_band_fraction_of_escaped: 0.515427657873701
+
+Δ(透過エネルギー割合, ON-OFF) = 0.022260
+
+書き出し: docs/egs5_crosscheck/fluorescence_copper_20kev/chatcarlo_results.json
