@@ -1,0 +1,33 @@
+{
+  "off": {
+    "fluorescence_enabled": false,
+    "n_histories": 1000000,
+    "seed": 1,
+    "energy_keV": 100.0,
+    "thickness_cm": 0.75,
+    "linear_mu_per_cm": 4.107922936502956,
+    "n_fluorescence": 0,
+    "n_escaped": 105665,
+    "uncollided_transmission": 0.045499,
+    "uncollided_transmission_stderr": 0.0002083958756765594,
+    "transmitted_energy_fraction": 0.0970111759413773,
+    "transmitted_energy_fraction_stderr": 0.0002822320329012321,
+    "peak_band_fraction_of_escaped": 0.0
+  },
+  "on": {
+    "fluorescence_enabled": true,
+    "n_histories": 1000000,
+    "seed": 1,
+    "energy_keV": 100.0,
+    "thickness_cm": 0.75,
+    "linear_mu_per_cm": 4.107922936502956,
+    "n_fluorescence": 363276,
+    "n_escaped": 105527,
+    "uncollided_transmission": 0.045499,
+    "uncollided_transmission_stderr": 0.0002083958756765594,
+    "transmitted_energy_fraction": 0.09661155297622177,
+    "transmitted_energy_fraction_stderr": 0.0002812748392462886,
+    "peak_band_fraction_of_escaped": 0.0029944943000369574
+  },
+  "delta_transmitted_energy_fraction_on_minus_off": -0.0003996229651555272
+}
