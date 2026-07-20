@@ -1,0 +1,45 @@
+         11628463 function calls (11627972 primitive calls) in 3.761 seconds
+
+   Ordered by: cumulative time
+   List reduced from 493 to 40 due to restriction <40>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    4.304    4.304 /Users/oishifamily/Projects/viveMonte/chatcarlo/transport.py:228(run_transport)
+        1    0.051    0.051    4.092    4.092 /Users/oishifamily/Projects/viveMonte/chatcarlo/transport.py:76(transport_photons)
+      408    0.005    0.000    1.715    0.004 /Users/oishifamily/Projects/viveMonte/chatcarlo/materials.py:68(_cs)
+      260    0.142    0.001    1.659    0.006 /Users/oishifamily/Projects/viveMonte/chatcarlo/materials.py:76(<listcomp>)
+       25    0.006    0.000    1.069    0.043 /Users/oishifamily/Projects/viveMonte/chatcarlo/transport.py:53(_interaction_probabilities)
+       23    0.027    0.001    1.066    0.046 /Users/oishifamily/Projects/viveMonte/chatcarlo/physics.py:89(sample_compton_bound)
+      101    0.000    0.000    1.051    0.010 /Users/oishifamily/Projects/viveMonte/chatcarlo/materials.py:125(mu_rho_parts)
+       23    0.004    0.000    1.015    0.044 /Users/oishifamily/Projects/viveMonte/chatcarlo/physics.py:72(sample_compton_element)
+       84    0.010    0.000    0.997    0.012 /Users/oishifamily/Projects/viveMonte/chatcarlo/materials.py:178(compton_element_weights)
+       84    0.000    0.000    0.944    0.011 /Users/oishifamily/Projects/viveMonte/chatcarlo/materials.py:188(<listcomp>)
+       25    0.006    0.000    0.691    0.028 /Users/oishifamily/Projects/viveMonte/chatcarlo/transport.py:33(_linear_mu_batch)
+      105    0.000    0.000    0.664    0.006 /Users/oishifamily/Projects/viveMonte/chatcarlo/materials.py:285(linear_mu)
+      105    0.000    0.000    0.664    0.006 /Users/oishifamily/Projects/viveMonte/chatcarlo/materials.py:80(mu_rho)
+       23    0.396    0.017    0.653    0.028 /Users/oishifamily/Projects/viveMonte/chatcarlo/physics.py:233(sample_rayleigh_cos_theta)
+   489867    0.047    0.000    0.595    0.000 /Users/oishifamily/Projects/viveMonte/.venv/lib/python3.11/site-packages/xraylib.py:4623(CS_Total_CP)
+   489867    0.548    0.000    0.548    0.000 {built-in method _xraylib.CS_Total_CP}
+  2731700    0.252    0.000    0.517    0.000 /Users/oishifamily/Projects/viveMonte/.venv/lib/python3.11/site-packages/xraylib.py:3842(CS_Compt)
+   302959    0.029    0.000    0.313    0.000 /Users/oishifamily/Projects/viveMonte/.venv/lib/python3.11/site-packages/xraylib.py:4635(CS_Photo_CP)
+   302959    0.029    0.000    0.305    0.000 /Users/oishifamily/Projects/viveMonte/.venv/lib/python3.11/site-packages/xraylib.py:4647(CS_Rayl_CP)
+   302959    0.028    0.000    0.305    0.000 /Users/oishifamily/Projects/viveMonte/.venv/lib/python3.11/site-packages/xraylib.py:4659(CS_Compt_CP)
+       24    0.002    0.000    0.286    0.012 /Users/oishifamily/Projects/viveMonte/chatcarlo/physics.py:149(sample_fluorescence)
+   302959    0.284    0.000    0.284    0.000 {built-in method _xraylib.CS_Photo_CP}
+       24    0.002    0.000    0.281    0.012 /Users/oishifamily/Projects/viveMonte/chatcarlo/physics.py:132(sample_photo_element)
+   302959    0.276    0.000    0.276    0.000 {built-in method _xraylib.CS_Compt_CP}
+   302959    0.276    0.000    0.276    0.000 {built-in method _xraylib.CS_Rayl_CP}
+       99    0.003    0.000    0.272    0.003 /Users/oishifamily/Projects/viveMonte/chatcarlo/materials.py:195(photo_element_weights)
+  2731700    0.264    0.000    0.264    0.000 {built-in method _xraylib.CS_Compt}
+       99    0.000    0.000    0.256    0.003 /Users/oishifamily/Projects/viveMonte/chatcarlo/materials.py:205(<listcomp>)
+    91462    0.045    0.000    0.248    0.000 /Users/oishifamily/Projects/viveMonte/.venv/lib/python3.11/site-packages/numpy/lib/_function_base_impl.py:1538(interp)
+        1    0.000    0.000    0.204    0.204 /Users/oishifamily/Projects/viveMonte/chatcarlo/source.py:213(photon_count_through_field)
+        1    0.000    0.000    0.203    0.203 /Users/oishifamily/Projects/viveMonte/.venv/lib/python3.11/site-packages/spekpy/SpekPy.py:28(__init__)
+        1    0.000    0.000    0.203    0.203 /Users/oishifamily/Projects/viveMonte/.venv/lib/python3.11/site-packages/spekpy/SpekPy.py:183(set_state_parameters)
+        1    0.000    0.000    0.197    0.197 /Users/oishifamily/Projects/viveMonte/.venv/lib/python3.11/site-packages/spekpy/SpekPy.py:320(spectrum_from_model)
+        1    0.000    0.000    0.197    0.197 /Users/oishifamily/Projects/viveMonte/.venv/lib/python3.11/site-packages/spekpy/SpekModel.py:91(get_spectrum_parameters)
+        1    0.000    0.000    0.197    0.197 /Users/oishifamily/Projects/viveMonte/.venv/lib/python3.11/site-packages/spekpy/SpekAniso.py:37(__init__)
+        1    0.007    0.007    0.185    0.185 /Users/oishifamily/Projects/viveMonte/.venv/lib/python3.11/site-packages/spekpy/SpekAniso.py:468(__Brems)
+    91462    0.175    0.000    0.175    0.000 {built-in method numpy._core._multiarray_umath.interp}
+   786356    0.073    0.000    0.149    0.000 /Users/oishifamily/Projects/viveMonte/.venv/lib/python3.11/site-packages/xraylib.py:3818(CS_Photo)
+       23    0.001    0.000    0.122    0.005 /Users/oishifamily/Projects/viveMonte/chatcarlo/physics.py:233(sample_rayleigh_element)

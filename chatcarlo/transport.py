@@ -20,8 +20,7 @@ import numpy as np
 
 from .dose_coefficients import h_star_10_per_fluence
 from .geometry import Geometry
-from .materials import (density, linear_mu, material_groups, mu_en_rho,
-                         mu_rho_parts)
+from .materials import density, material_groups, mu_en_rho, mu_rho_parts
 from .physics import (isotropic_direction, sample_compton_bound,
                        sample_fluorescence, sample_rayleigh_cos_theta,
                        sample_rayleigh_element, scatter_direction)
@@ -30,11 +29,29 @@ from .tally import VoxelGrid, accumulate_track_length
 from .trajectory import TrajectoryRecorder
 
 
-def _linear_mu_batch(materials: np.ndarray, energies: np.ndarray) -> np.ndarray:
-    mu = np.zeros(len(materials))
+def _mu_and_parts_batch(materials: np.ndarray, energies: np.ndarray):
+    """線減弱係数μ[1/cm]と、光電/コンプトン/レイリー内訳の質量減弱係数[cm²/g]を、
+    材料グループごとに`mu_rho_parts`を1回だけ呼んでまとめて求める。
+
+    μ(自由行程判定用)と内訳(相互作用種別抽選用)は元々別々に
+    `linear_mu`/`mu_rho_parts`を呼んでおり、同じ(材料,エネルギー)組の
+    断面積テーブル参照を1ラウンドに2回行っていた（docs/plan_transport_speedup.md
+    Phase 1で実測: xraylib呼び出し削減後もテーブル参照コール自体の固定
+    オーバーヘッドが支配的になったため、この重複を解消した）。μは内訳の和に
+    密度を掛けるだけなので、常に元の`linear_mu`と同一の値になる。
+    """
+    n = len(materials)
+    mu = np.zeros(n)
+    photo = np.zeros(n)
+    compt = np.zeros(n)
+    rayl = np.zeros(n)
     for name, m in material_groups(materials):
-        mu[m] = linear_mu(name, energies[m])
-    return mu
+        parts = mu_rho_parts(name, energies[m])
+        photo[m] = parts["photoelectric"]
+        compt[m] = parts["compton"]
+        rayl[m] = parts["rayleigh"]
+        mu[m] = (parts["photoelectric"] + parts["compton"] + parts["rayleigh"]) * density(name)
+    return mu, {"photoelectric": photo, "compton": compt, "rayleigh": rayl}
 
 
 def _mu_en_linear_batch(materials: np.ndarray, energies: np.ndarray) -> np.ndarray:
@@ -50,17 +67,20 @@ def _deposit(energy_deposited: dict, mat_arr: np.ndarray, e_arr: np.ndarray) -> 
         energy_deposited[name] = energy_deposited.get(name, 0.0) + float(np.sum(e_arr[m]))
 
 
-def _interaction_probabilities(materials: np.ndarray, energies: np.ndarray):
-    """相互作用点ごとの(光電確率, 光電+コンプトン累積確率)。残りがレイリー。"""
-    p_photo = np.zeros(len(materials))
-    p_compt = np.zeros(len(materials))
-    for name, m in material_groups(materials):
-        parts = mu_rho_parts(name, energies[m])
-        tot = parts["photoelectric"] + parts["compton"] + parts["rayleigh"]
-        tot = np.where(tot > 0, tot, 1.0)
-        p_photo[m] = parts["photoelectric"] / tot
-        p_compt[m] = parts["compton"] / tot
-    return p_photo, p_compt
+def _interaction_probabilities_from_parts(parts_full: dict, mask: np.ndarray):
+    """相互作用点ごとの(光電確率, 光電+コンプトン累積確率)。残りがレイリー。
+
+    `_mu_and_parts_batch`が全生存光子について既に求めた内訳をmaskで
+    切り出すだけで、断面積テーブルへは再アクセスしない（同一(材料,エネルギー)
+    組に対する値は決定的に同じなので、フルバッチ計算からの切り出しと
+    サブセットのみの独立再計算は数値的に厳密に一致する）。
+    """
+    photo = parts_full["photoelectric"][mask]
+    compt = parts_full["compton"][mask]
+    rayl = parts_full["rayleigh"][mask]
+    tot = photo + compt + rayl
+    tot = np.where(tot > 0, tot, 1.0)
+    return photo / tot, compt / tot
 
 
 @dataclass
@@ -110,7 +130,7 @@ def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
         idx = np.where(alive)[0]
         o, d, e = pos[idx], dirv[idx], energy[idx]
         mat = geometry.material_at(o)
-        mu = _linear_mu_batch(mat, e)
+        mu, parts_full = _mu_and_parts_batch(mat, e)
         t_boundary, escape = geometry.next_boundary(o, d)
         mu_safe = np.where(mu > 0, mu, 1e-30)
         tau_to_boundary = mu * t_boundary
@@ -141,7 +161,7 @@ def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
             mat_i = mat[interact]
             e_i = e[interact]
             r_type = rng.random(len(iidx))
-            p_photo, p_compt = _interaction_probabilities(mat_i, e_i)
+            p_photo, p_compt = _interaction_probabilities_from_parts(parts_full, interact)
 
             is_photo = r_type < p_photo
             is_compt = (~is_photo) & (r_type < p_photo + p_compt)
