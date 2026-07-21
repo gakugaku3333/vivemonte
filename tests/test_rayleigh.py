@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import numpy as np
 
+import pytest
+
 from chatcarlo.materials import element_composition, rayleigh_element_weights, rayleigh_form_factor_table
 from chatcarlo.physics import sample_rayleigh_cos_theta, sample_rayleigh_element
 
@@ -74,6 +76,31 @@ def test_element_selection_only_returns_compound_members():
     z_chosen = sample_rayleigh_element(materials, energies, rng)
     valid_zs = {z for z, _ in element_composition("bone")}
     assert set(np.unique(z_chosen).tolist()).issubset(valid_zs)
+
+
+def test_cos_theta_stays_within_physical_bounds():
+    """2段階方式(逆変換+角度因子棄却、docs/plan_rayleigh_compton_importance_sampling.md)
+    は補間の丸め誤差でcosθが[-1,1]をわずかに超えうる箇所をclipで守っている。
+    診断領域の上限(150keV)・全代表元素で境界超過がないことを確認する。"""
+    rng = np.random.default_rng(99)
+    n = 200_000
+    for z in (1, 8, 20, 82):
+        cos_theta = sample_rayleigh_cos_theta(np.full(n, z), np.full(n, 150.0), rng)
+        assert cos_theta.min() >= -1.0
+        assert cos_theta.max() <= 1.0
+
+
+def test_energy_above_table_range_raises():
+    """設計判断5: q(E)がテーブル上限(q_max=20 Å⁻¹)を超えるエネルギーは
+    fail-fastで検出する（診断領域150keV上限なら本来起き得ないが、誤って範囲外
+    エネルギーを渡した場合に静かに間違った値を返さないための防御）。
+    materials._element_interp_index_frac と同じくValueError（python -Oで無効化
+    されるassertではない）。"""
+    rng = np.random.default_rng(0)
+    n = 10
+    # E=3000keVならq_max=E/hc≈242 Å⁻¹ >> テーブル上限20 Å⁻¹
+    with pytest.raises(ValueError):
+        sample_rayleigh_cos_theta(np.full(n, 82), np.full(n, 3000.0), rng)
 
 
 def test_calcium_overrepresented_relative_to_mass_fraction_in_bone():

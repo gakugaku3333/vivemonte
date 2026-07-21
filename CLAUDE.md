@@ -90,7 +90,11 @@ non-physical-max warnings in [diagnostics.py](chatcarlo/diagnostics.py).
 then an additional S(Z,q)/Z rejection from the incoherent scattering function via `xraylib.SF_Compt`; compounds
 sampled by mass-fraction-weighted element pick, same pattern as Rayleigh, before the angular distribution) /
 Rayleigh (atomic form factor F(Z,q) via `xraylib.FF_Rayl`, compounds sampled by mass-fraction-weighted element
-pick before the angular distribution). Electron range is neglected (kerma approximation — local absorption at
+pick before the angular distribution; the angle itself is drawn via inverse-transform sampling on a cumulative
+F(Z,q)² table in x≡q² space followed by a (1+cos²θ)/2 rejection — ≥50% acceptance guaranteed, same two-stage
+scheme EGS5 itself uses — replacing a uniform-cosθ proposal whose acceptance rate collapsed to <1% for light
+elements at high energy; see [docs/plan_rayleigh_compton_importance_sampling.md](docs/plan_rayleigh_compton_importance_sampling.md)).
+Electron range is neglected (kerma approximation — local absorption at
 the interaction point), except that photoelectric absorption samples K-shell fluorescence emission
 (`sample_fluorescence` in [physics.py](chatcarlo/physics.py); K-shell only, no cascade/L-shell, line energies
 below 5 keV are absorbed locally instead of emitted) — when emitted, the photon continues transport at the

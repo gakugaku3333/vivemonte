@@ -11,9 +11,15 @@
   S(Z,q)/Z（xraylib.SF_Compt, EPDLベース）で追加棄却する（`sample_compton_bound`）。
   自由電子版（束縛効果なし）は`sample_klein_nishina`として比較用に残している
 - レイリー: 弾性散乱、エネルギー変化なし。角度分布は原子形状因子F(Z,q)込みの
-  微分断面積 dσ/dΩ ∝ (1+cos²θ)·F(Z,q)² から棄却法で抽出する（xraylib.FF_Rayl,
-  EPDLベース）。化合物・混合物では質量分率×元素別レイリー断面積で
-  構成元素をまず抽選してからその元素のF(Z,q)を使う
+  微分断面積 dσ/dΩ ∝ (1+cos²θ)·F(Z,q)² から抽出する（xraylib.FF_Rayl, EPDLベース）。
+  化合物・混合物では質量分率×元素別レイリー断面積で構成元素をまず抽選してから
+  その元素のF(Z,q)を使う。角度サンプリングは変数変換x≡q²による**逆変換
+  （F²の累積テーブルA(x)から）＋角度因子(1+cos²θ)/2の棄却**という2段階方式
+  （`sample_rayleigh_cos_theta`）——EGS5のcoherent scatteringと同型の標準手法で、
+  受理率は数学的に50%以上が保証される。旧実装（cosθ一様提案＋包絡線2Z²の
+  単純棄却、軽元素・高エネルギーで受理率が数%以下に落ち込み反復数千回に及んだ）
+  は`_sample_rayleigh_cos_theta_uniform`として分布同等性検証用に残している
+  （docs/plan_rayleigh_compton_importance_sampling.md参照）
 """
 from __future__ import annotations
 
@@ -22,8 +28,8 @@ import xraylib
 
 from .materials import (compton_element_weights, fluorescence_k_data,
                          incoherent_sq_table, material_groups,
-                         photo_element_weights, rayleigh_element_weights,
-                         rayleigh_form_factor_table)
+                         photo_element_weights, rayleigh_cumulative_table,
+                         rayleigh_element_weights, rayleigh_form_factor_table)
 
 _MEC2_KEV = 511.0
 _HC_KEV_ANGSTROM = 12.3984193  # xraylib.MomentTransfと同じ定数（hc）
@@ -230,13 +236,21 @@ def sample_rayleigh_element(materials: np.ndarray, energies: np.ndarray,
     return z_chosen
 
 
-def sample_rayleigh_cos_theta(z_array: np.ndarray, e_array: np.ndarray,
-                               rng: np.random.Generator) -> np.ndarray:
-    """原子形状因子込みの微分断面積 (1+cos²θ)·F(Z,q)² を棄却法で抽出。
+def _sample_rayleigh_cos_theta_uniform(z_array: np.ndarray, e_array: np.ndarray,
+                                        rng: np.random.Generator) -> np.ndarray:
+    """[旧実装・検証用に保持] cosθ一様提案＋包絡線2Z²の棄却法。
 
+    原子形状因子込みの微分断面積 (1+cos²θ)·F(Z,q)² を棄却法で抽出する。
     q = E·sin(θ/2)/hc [Å⁻¹]（xraylib.MomentTransfと同じ定義）。F(Z,q)はq=0で
     Zを取り単調減少するため、g(cosθ)=(1+cos²θ)F(Z,q)²の最大値は前方散乱
     (θ=0, q=0)での 2Z² となり、これを棄却法の包絡線に使う。
+
+    軽元素・高エネルギーほど受理率が数%以下に落ち込み反復数千回に及ぶ
+    （docs/plan_transport_speedup.md Phase 2実施記録、
+    docs/speedup_baseline/RCI_PHASE0_BASELINE.md参照）ため輸送本体では
+    使わない。新実装（`sample_rayleigh_cos_theta`、2段階逆変換方式）との
+    分布同等性を検証する回帰テスト専用に残す
+    （docs/plan_rayleigh_compton_importance_sampling.md 設計判断3）。
     """
     n = len(z_array)
     cos_theta = np.empty(n)
@@ -249,7 +263,7 @@ def sample_rayleigh_cos_theta(z_array: np.ndarray, e_array: np.ndarray,
         q = ep * np.sin(theta / 2.0) / _HC_KEV_ANGSTROM
 
         f = np.empty(len(pending))
-        for z in set(zp.tolist()):
+        for z in sorted(set(zp.tolist())):
             m = zp == z
             q_grid, f_grid = rayleigh_form_factor_table(int(z))
             f[m] = np.interp(q[m], q_grid, f_grid)
@@ -258,6 +272,79 @@ def sample_rayleigh_cos_theta(z_array: np.ndarray, e_array: np.ndarray,
         envelope = 2.0 * zp.astype(float) ** 2
         xi2 = rng.random(len(pending))
         accept = xi2 * envelope <= g
+        acc = pending[accept]
+        cos_theta[acc] = c[accept]
+        pending = pending[~accept]
+    return cos_theta
+
+
+def sample_rayleigh_cos_theta(z_array: np.ndarray, e_array: np.ndarray,
+                               rng: np.random.Generator) -> np.ndarray:
+    """原子形状因子込みの微分断面積 (1+cos²θ)·F(Z,q)² を2段階方式で抽出。
+
+    docs/plan_rayleigh_compton_importance_sampling.md の本命の高速化。
+    q = E·sin(θ/2)/hc [Å⁻¹]、変数変換 x ≡ q² を使うと
+    cosθ = 1 - 2x/x_max(E)（x_max(E) = q_max(θ=π,E)² = (E/hc)²）が
+    xの1次式になる（ヤコビアン|dcosθ/dx|は定数）ため、目標分布は
+
+        p(x) ∝ F(Z,√x)²  （0 ≤ x ≤ x_max(E)）
+        角度因子 (1+cos²θ)/2 ∈ [1/2, 1]
+
+    の2段に厳密に分解できる。第1段は`rayleigh_cumulative_table`の累積
+    A(x)=∫F²dx' から**逆変換サンプリング**でxを1回で決める（xi1を消費）。
+    第2段は角度因子を受理確率とする棄却で、[1/2,1]に収まるため**受理率は
+    常に50%以上**——旧実装（軽元素高エネルギーで受理率が数%以下、反復
+    数千回）と違い、棄却ループはほぼ即座に収束する（xi2を消費）。
+    これはEGS5自身が採用しているcoherent scatteringの標準サンプリング
+    手法と同型（EGS5/EGSnrcのA(x)テーブル逆変換+(1+cos²θ)/2棄却）。
+
+    元素Zごとに異なる累積テーブルを使うため、pending内をZでグループ化して
+    ループする。グループはソート順で処理する（`materials.material_groups`
+    と同じ理由: setの反復順はプロセスごとに変わるため、未ソートだと
+    グループごとのrng消費順が変わり同一seedでも結果が変わってしまう）。
+
+    旧実装（cosθ一様提案）は`_sample_rayleigh_cos_theta_uniform`として
+    分布同等性の検証用に保持している。乱数消費列は旧実装と異なる
+    （試行回数が変わるため）——同一seedでのビット一致は要求しない
+    （設計判断2、docs/plan_transport_speedup.md 設計判断4と同じ基準）。
+    """
+    n = len(z_array)
+    cos_theta = np.empty(n)
+    pending = np.arange(n)
+
+    x_max_all = (e_array / _HC_KEV_ANGSTROM) ** 2
+
+    while len(pending) > 0:
+        zp = z_array[pending]
+        x_max = x_max_all[pending]
+
+        x = np.empty(len(pending))
+        for z in sorted(set(zp.tolist())):
+            m = zp == z
+            x_grid, a_grid = rayleigh_cumulative_table(int(z))
+            # テーブル上限超えは materials._element_interp_index_frac と同じく
+            # ValueError で fail-fast にする（assertは python -O で無効化される。
+            # また np.interp は範囲外を端値にクランプするため、ここで弾かないと
+            # x_max がテーブル端に切り詰められ後方散乱が欠落する静かな物理誤差に
+            # なる）。上限は別定数に写さず**実テーブルの端 x_grid[-1] を直接**
+            # 使うことで、materials.py 側の q_max 既定を変えても不整合が起きない。
+            # 診断領域150keV上限なら本来起き得ず、scene.py が validate 時点で既に
+            # 弾くので、これは多重防御。
+            if x_max[m].size and x_max[m].max() > x_grid[-1]:
+                bad = x_max[m].max()
+                raise ValueError(
+                    f"q(E)がレイリー形状因子テーブル上限を超えています(Z={z}): "
+                    f"q={np.sqrt(bad):.4g} Å⁻¹ > テーブル上限 {np.sqrt(x_grid[-1]):.4g} Å⁻¹")
+            a_cut = np.interp(x_max[m], x_grid, a_grid)  # A(x_max(E))で打ち切り
+            xi1 = rng.random(int(np.sum(m)))
+            x[m] = np.interp(xi1 * a_cut, a_grid, x_grid)  # 逆変換 A^-1
+
+        x = np.minimum(x, x_max)  # 補間の丸め誤差で境界をわずかに超えるのを防ぐ
+        c = 1.0 - 2.0 * x / x_max
+        c = np.clip(c, -1.0, 1.0)
+
+        xi2 = rng.random(len(pending))
+        accept = xi2 <= (1.0 + c ** 2) / 2.0
         acc = pending[accept]
         cos_theta[acc] = c[accept]
         pending = pending[~accept]

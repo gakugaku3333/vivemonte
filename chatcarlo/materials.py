@@ -16,6 +16,7 @@ from pathlib import Path
 
 import numpy as np
 import xraylib
+from scipy.integrate import cumulative_trapezoid
 from scipy.interpolate import PchipInterpolator
 
 _DATA_DIR = Path(__file__).resolve().parent / "data" / "nist_xaamdi"
@@ -381,6 +382,28 @@ def rayleigh_form_factor_table(z: int, q_max: float = 20.0, n: int = 2000) -> tu
     q_grid = np.linspace(0.0, q_max, n)
     f_grid = np.array([xraylib.FF_Rayl(z, q) for q in q_grid])
     return q_grid, f_grid
+
+
+@functools.lru_cache(maxsize=None)
+def rayleigh_cumulative_table(z: int, q_max: float = 20.0, n: int = 2000) -> tuple[np.ndarray, np.ndarray]:
+    """レイリー角度サンプリングの逆変換用累積分布テーブル（docs/
+    plan_rayleigh_compton_importance_sampling.md の2段階方式、Phase 1）。
+
+    変数変換 x ≡ q² を使うと cosθ = 1 - 2x/x_max(E) がxの1次式になり
+    （ヤコビアン|dcosθ/dx|が定数）、目標分布 (1+cos²θ)F(Z,q)² は
+    「F(Z,√x)²からの逆変換」と「角度因子(1+cos²θ)/2の棄却」に分解できる
+    （`physics.sample_rayleigh_cos_theta`参照）。ここではその第1段用に
+    A(x) = ∫₀ˣ F(Z,√x')² dx' を x∈[0, q_max²]上に事前計算する。
+
+    `rayleigh_form_factor_table`と同じq_grid(線形, [0,q_max])をx=q²に写して
+    使う——q間隔が一様でもx間隔はΔx≈2qΔqとqに比例して広がるため、x空間では
+    小x(前方散乱・q小)側が自動的に密になり、F²の変化が速い領域をちょうど
+    捉えられる。
+    """
+    q_grid, f_grid = rayleigh_form_factor_table(z, q_max=q_max, n=n)
+    x_grid = q_grid ** 2
+    a_grid = cumulative_trapezoid(f_grid ** 2, x_grid, initial=0.0)
+    return x_grid, a_grid
 
 
 def compton_element_weights(material: str, energies_keV) -> tuple[np.ndarray, np.ndarray]:

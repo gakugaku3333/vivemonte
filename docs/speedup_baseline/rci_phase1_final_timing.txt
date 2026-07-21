@@ -1,0 +1,3 @@
+n_histories=    1000  wall=0.200s  (200.47 us/history)
+n_histories=   10000  wall=0.282s  (28.22 us/history)
+n_histories=  100000  wall=1.046s  (10.46 us/history)
