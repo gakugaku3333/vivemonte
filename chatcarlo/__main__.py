@@ -97,8 +97,13 @@ def cmd_run(args) -> int:
     for w in scene.warnings:
         print(f"[警告] {w}")
 
+    import os
+    n_workers = args.workers
+    if n_workers == 0:
+        n_workers = os.cpu_count() or 1
     result = run_transport(scene, n_histories=int(args.n_histories), seed=args.seed,
-                            dose_grid=args.dose_grid, grid_resolution_cm=args.resolution)
+                            dose_grid=args.dose_grid, grid_resolution_cm=args.resolution,
+                            n_workers=n_workers)
     print(f"histories: {result.n_histories:,}")
     print(f"吸収（光電）割合: {result.fraction_absorbed:.4f}")
     print(f"脱出割合: {result.fraction_escaped:.4f}")
@@ -246,6 +251,13 @@ def main() -> int:
     pr.add_argument("--dose-grid", action="store_true", help="ボクセル吸収線量タリーを有効化")
     pr.add_argument("--resolution", type=float, default=5.0, help="線量グリッド解像度[cm]（既定5cm）")
     pr.add_argument("--dose-out", help="線量グリッドを.npzに書き出すパス")
+    pr.add_argument("--workers", type=int, default=1,
+                     help="並列ワーカー数（既定1=直列、0=CPU数自動）。マルチプロセスで"
+                          "n_historiesを分散し物理は変えない。ワーカーごとにimportと"
+                          "断面積テーブル構築の固定費（数百ms〜1秒程度）がかかるため、"
+                          "n_historiesが小さいと逆に遅くなる場合がある。同一seedでも"
+                          "workers数を変えると結果はビット一致しない（統計的には同等。"
+                          "docs/plan_phase3_parallel.md参照）")
     pr.set_defaults(func=cmd_run)
 
     ppl = sub.add_parser("plot", help="線量/H*(10)マップの断面図を生成")

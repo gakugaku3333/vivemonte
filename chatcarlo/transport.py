@@ -245,15 +245,13 @@ class TransportResult:
     n_fluorescence: int = 0
 
 
-def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
-                   batch_size: int = 200_000, dose_grid: bool = False,
-                   grid_resolution_cm: float = 5.0) -> TransportResult:
-    rng = np.random.default_rng(seed)
-    src = scene.raw["source"]
-    geometry = Geometry(scene.raw["geometry"])
-    grid = VoxelGrid.from_bbox(geometry.bbox_min, geometry.bbox_max, grid_resolution_cm) if dose_grid else None
-    fluorescence_enabled = scene.raw.get("physics", {}).get("fluorescence", True)
+def _run_batches(src: dict, geometry: Geometry, rng: np.random.Generator, n_histories: int,
+                  batch_size: int, grid: "VoxelGrid | None", fluorescence_enabled: bool) -> dict:
+    """(材料別付与エネルギー, 吸収数, 脱出数, 散乱回数総和, 蛍光放出数)を1本の乱数列で積算する。
 
+    直列実行・並列ワーカーの両方から共有される内側ループ本体（数値ロジックは
+    run_transportの旧実装からそのまま切り出しただけで不変）。
+    """
     energy_deposited: dict = {}
     n_absorbed = 0
     n_escaped = 0
@@ -272,9 +270,85 @@ def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
         n_absorbed += int(np.sum(result.absorbed))
         n_escaped += int(np.sum(result.escaped))
         scatter_sum += int(np.sum(result.n_scatter))
+    return {
+        "energy_deposited": energy_deposited,
+        "n_absorbed": n_absorbed,
+        "n_escaped": n_escaped,
+        "scatter_sum": scatter_sum,
+        "n_fluorescence": n_fluorescence,
+        "kerma_keV": grid.kerma_keV if grid is not None else None,
+        "h10_track_pSv_cm3": grid.h10_track_pSv_cm3 if grid is not None else None,
+    }
+
+
+def _run_worker(scene_raw: dict, n_histories: int, seed_seq: np.random.SeedSequence,
+                 batch_size: int, dose_grid: bool, grid_resolution_cm: float) -> dict:
+    """並列ワーカーのエントリポイント（ProcessPoolExecutorでpickleされるためモジュール
+    トップレベル関数にしてある）。sceneオブジェクトではなくraw dictだけを受け取り、
+    Geometry/VoxelGridはワーカー内で再構築する（設計判断5, plan_phase3_parallel.md）。
+    """
+    rng = np.random.default_rng(seed_seq)
+    src = scene_raw["source"]
+    geometry = Geometry(scene_raw["geometry"])
+    grid = VoxelGrid.from_bbox(geometry.bbox_min, geometry.bbox_max, grid_resolution_cm) if dose_grid else None
+    fluorescence_enabled = scene_raw.get("physics", {}).get("fluorescence", True)
+    return _run_batches(src, geometry, rng, n_histories, batch_size, grid, fluorescence_enabled)
+
+
+def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
+                   batch_size: int = 200_000, dose_grid: bool = False,
+                   grid_resolution_cm: float = 5.0, n_workers: int = 1) -> TransportResult:
+    """n_workers=1（既定）は直列実行で、並列化前と完全にビット一致するコードパスを通る。
+
+    n_workers>=2 は `np.random.SeedSequence.spawn` でワーカー別乱数ストリームを
+    決定的に導出し、ProcessPoolExecutorでn_historiesを均等割りして分散、結果を
+    単純加算で集約する（設計判断はdocs/plan_phase3_parallel.md参照）。同一
+    (seed, n_workers) の組では再現するが、n_workersを変えると直列/他workers数の
+    結果とビット一致しない（統計的同等のみ）。
+    """
+    src = scene.raw["source"]
+    geometry = Geometry(scene.raw["geometry"])
+    grid = VoxelGrid.from_bbox(geometry.bbox_min, geometry.bbox_max, grid_resolution_cm) if dose_grid else None
+    fluorescence_enabled = scene.raw.get("physics", {}).get("fluorescence", True)
+
+    if n_workers <= 1:
+        rng = np.random.default_rng(seed)
+        agg = _run_batches(src, geometry, rng, n_histories, batch_size, grid, fluorescence_enabled)
+    else:
+        import concurrent.futures
+
+        counts = [n_histories // n_workers] * n_workers
+        for i in range(n_histories % n_workers):
+            counts[i] += 1
+        seed_seqs = np.random.SeedSequence(seed).spawn(n_workers)
+
+        energy_deposited: dict = {}
+        n_absorbed = 0
+        n_escaped = 0
+        scatter_sum = 0
+        n_fluorescence = 0
+        with concurrent.futures.ProcessPoolExecutor(max_workers=n_workers) as pool:
+            futures = [pool.submit(_run_worker, scene.raw, counts[i], seed_seqs[i],
+                                    batch_size, dose_grid, grid_resolution_cm)
+                       for i in range(n_workers) if counts[i] > 0]
+            for fut in futures:
+                r = fut.result()
+                for name, e_keV in r["energy_deposited"].items():
+                    energy_deposited[name] = energy_deposited.get(name, 0.0) + e_keV
+                n_absorbed += r["n_absorbed"]
+                n_escaped += r["n_escaped"]
+                scatter_sum += r["scatter_sum"]
+                n_fluorescence += r["n_fluorescence"]
+                if grid is not None:
+                    grid.kerma_keV += r["kerma_keV"]
+                    grid.h10_track_pSv_cm3 += r["h10_track_pSv_cm3"]
+        agg = {"energy_deposited": energy_deposited, "n_absorbed": n_absorbed,
+               "n_escaped": n_escaped, "scatter_sum": scatter_sum, "n_fluorescence": n_fluorescence}
 
     # 絶対線量校正: CTDIvol基準（CT向け、実測に装置特性が折り込まれ汎用性が高い）
     # が指定されていればそちらを優先。なければmAs+SpekPyフルエンス基準。
+    # ワーカーseedとは無関係にマスターseedで親プロセス側で1回だけ計算する
+    # （設計判断6, plan_phase3_parallel.md — ここをワーカー側に移すと校正が変わる）。
     if src.get("ctdi_vol_mGy") is not None:
         from .ctdi import effective_histories_from_ctdi
         n_photons_real = effective_histories_from_ctdi(src, seed=seed)
@@ -285,11 +359,11 @@ def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
 
     return TransportResult(
         n_histories=n_histories,
-        energy_deposited_MeV={k: v / 1000.0 for k, v in energy_deposited.items()},
-        fraction_absorbed=n_absorbed / n_histories,
-        fraction_escaped=n_escaped / n_histories,
-        mean_scatter_events=scatter_sum / n_histories,
+        energy_deposited_MeV={k: v / 1000.0 for k, v in agg["energy_deposited"].items()},
+        fraction_absorbed=agg["n_absorbed"] / n_histories,
+        fraction_escaped=agg["n_escaped"] / n_histories,
+        mean_scatter_events=agg["scatter_sum"] / n_histories,
         grid=grid,
         n_photons_real=n_photons_real,
-        n_fluorescence=n_fluorescence,
+        n_fluorescence=agg["n_fluorescence"],
     )

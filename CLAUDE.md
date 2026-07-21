@@ -41,6 +41,13 @@ python3 -m venv .venv
 .venv/bin/python -m chatcarlo run examples/chest_room.yaml -n 1e6 --seed 42 \
     --dose-grid --resolution 5 --dose-out dose.npz
 
+# multiprocess parallel run for large n (shielding-scale n=1e7+; --workers 0 = auto-detect cpu count).
+# Same seed with a different --workers value does NOT reproduce bit-for-bit (independent RNG
+# streams per worker via SeedSequence.spawn), only statistically — see docs/plan_phase3_parallel.md.
+# Worker startup (~0.8s each: reimport + rebuild cross-section tables) makes this net-negative
+# below roughly n=1e6; it pays off at shielding-evaluation scale (n=1e7+, ~3x at workers=4).
+.venv/bin/python -m chatcarlo run examples/chest_room.yaml -n 1e7 --seed 42 --workers 4
+
 # photon trajectory 3D visualization (small n; overlays onto the preview HTML template)
 .venv/bin/python -m chatcarlo trace examples/chest_room.yaml -n 200 --seed 42 -o trace.html
 
