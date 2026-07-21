@@ -110,3 +110,22 @@ def test_parallel_heel_effect_reproducible_and_consistent():
 
     r_serial = run_transport(_HEEL_SCENE, n_histories=n, seed=7, n_workers=1)
     assert abs(r_serial.fraction_absorbed - r1.fraction_absorbed) < 0.1
+
+
+def test_warm_up_cache_does_not_change_physics(monkeypatch):
+    """スペクトルキャッシュのwarm-up最適化が物理結果をビット単位で変えないこと
+    （中核の正当性主張の回帰ガード）。warm-upを無効化して各ワーカーが自前で
+    SpekPyを計算する旧挙動と、warm-up経由でキャッシュを配布する現挙動が、
+    同一(seed, workers)で完全一致することを確認する。SpekPyは決定的・pickleは
+    float無損失なので、両者は一致するはず。"""
+    import chatcarlo.transport as transport_mod
+
+    r_warm = run_transport(_SCENE, n_histories=20000, seed=42, n_workers=4)
+
+    # warm-upを「空キャッシュを返す」版に差し替え → 各ワーカーが自前でSpekPy計算
+    monkeypatch.setattr(transport_mod, "_warm_spectrum_cache", lambda src: ({}, {}))
+    r_nowarm = run_transport(_SCENE, n_histories=20000, seed=42, n_workers=4)
+
+    assert r_warm.energy_deposited_MeV == r_nowarm.energy_deposited_MeV
+    assert r_warm.fraction_absorbed == r_nowarm.fraction_absorbed
+    assert r_warm.n_fluorescence == r_nowarm.n_fluorescence

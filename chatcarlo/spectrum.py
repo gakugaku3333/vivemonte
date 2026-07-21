@@ -22,19 +22,25 @@ except ImportError:
     _HAS_SPEKPY = False
 
 
+# プロセスローカルなスペクトルキャッシュ。以前は functools.lru_cache
+# （maxsize=32/8）だったが、並列ワーカーへキャッシュ内容を事前注入する
+# （import_caches）ために外部から値を挿入できる必要があり、lru_cacheは
+# それを正式APIで提供しないため素のdictへ切り替えた。**上限（LRU eviction）は
+# 意図的に外してある**——キーは(kvp, 濾過, 陽極角[, sid, span])の組で、実運用の
+# 相異なる組み合わせ数はたかだか数種～十数種、1スペクトルは数百floatなので
+# 無制限でも実害はない（kvpを数百通り振るような極端なパラメータ掃引でも数MB級）。
 _spectrum_cache: dict = {}
 _heel_cache: dict = {}
 
 
 def _spekpy_spectrum(kvp: float, filtration_mm_al: float, anode_angle_deg: float):
-    """SpekPyでのスペクトル生成（プロセスローカルなdictキャッシュ）。
+    """SpekPyでのスペクトル生成（プロセスローカルなdictキャッシュ、上限なし）。
 
-    functools.lru_cacheではなく明示的なdictを使うのは、並列ワーカー
-    起動時にSpekPy呼び出し（1回あたり約0.9秒、chest_room実測）を
-    親プロセスで1回だけ行い、export_caches/import_caches経由でワーカーへ
-    転送してキャッシュを事前に温めるため（docs/plan_phase3_parallel.md
-    「積み残し」節）。lru_cacheは外部からのシード（値の事前挿入）が
-    正式なAPIとしてサポートされていないためdictに切り替えた。
+    キャッシュをdictにしている理由と上限を外した理由はモジュール冒頭の
+    _spectrum_cache定義のコメントを参照。並列ワーカー起動時にSpekPy呼び出し
+    （1回あたり約0.9秒、chest_room実測）を親プロセスで1回だけ行い、
+    export_caches/import_caches経由でワーカーへ転送してキャッシュを事前に
+    温めるために使う（docs/plan_phase3_parallel.md「積み残し2点の対応」節）。
     """
     key = (kvp, filtration_mm_al, anode_angle_deg)
     if key not in _spectrum_cache:
