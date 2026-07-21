@@ -84,3 +84,29 @@ def test_parallel_dose_grid_merge_consistent():
     r_single = run_transport(_SCENE, n_histories=n, seed=11, n_workers=1,
                               dose_grid=True, grid_resolution_cm=10.0)
     assert r_single.grid.total_kerma_MeV() > 0
+
+
+_HEEL_SCENE = validate_scene({
+    "geometry": [
+        {"name": "slab", "shape": "box", "material": "water",
+         "size_cm": [30, 10, 30], "center": [0, 5, 0]},
+    ],
+    "source": {
+        "kvp": 100.0, "position": [0, -80, 0], "direction": [0, 1, 0],
+        "anode_direction": [1, 0, 0], "heel_effect": True,
+        "field": {"shape": "rect", "size_cm": [30, 30], "sid_cm": 100},
+    },
+})
+
+
+def test_parallel_heel_effect_reproducible_and_consistent():
+    """ヒール効果（SpekPy軸外スペクトルをビン数分呼ぶ、単純kvpより固定費が
+    重い経路）でも並列化が正しく動くこと——warm-upによるスペクトルキャッシュ
+    共有(_warm_spectrum_cache)が効く主眼のケース。"""
+    n = 5000
+    r1 = run_transport(_HEEL_SCENE, n_histories=n, seed=7, n_workers=4)
+    r2 = run_transport(_HEEL_SCENE, n_histories=n, seed=7, n_workers=4)
+    assert r1.energy_deposited_MeV == r2.energy_deposited_MeV  # 完全再現
+
+    r_serial = run_transport(_HEEL_SCENE, n_histories=n, seed=7, n_workers=1)
+    assert abs(r_serial.fraction_absorbed - r1.fraction_absorbed) < 0.1

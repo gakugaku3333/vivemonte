@@ -54,3 +54,40 @@ def test_fallback_spectrum_used_when_spekpy_unavailable(monkeypatch):
     e, w = spectrum._default_spectrum(kvp=100.0, filtration_mm_al=2.5, anode_angle_deg=12.0)
     assert np.isclose(w.sum(), 1.0)
     assert e.max() <= 100.0
+
+
+def test_export_import_caches_avoids_recomputation(monkeypatch):
+    """export_caches/import_caches（並列ワーカーのSpekPy固定費削減用、
+    docs/plan_phase3_parallel.md「積み残し」節）— import後は同じキーで
+    SpekPyを再呼び出ししないこと。"""
+    spectrum._spectrum_cache.clear()
+    spectrum._heel_cache.clear()
+    e1, w1 = spectrum._default_spectrum(kvp=90.0, filtration_mm_al=2.5, anode_angle_deg=12.0)
+    spec_cache, heel_cache = spectrum.export_caches()
+    assert (90.0, 2.5, 12.0) in spec_cache
+
+    spectrum._spectrum_cache.clear()
+    spectrum._heel_cache.clear()
+    spectrum.import_caches(spec_cache, heel_cache)
+
+    calls = []
+    real_spek = spectrum._spekpy.Spek
+
+    def _tracking_spek(*args, **kwargs):
+        calls.append((args, kwargs))
+        return real_spek(*args, **kwargs)
+    monkeypatch.setattr(spectrum._spekpy, "Spek", _tracking_spek)
+
+    e2, w2 = spectrum._default_spectrum(kvp=90.0, filtration_mm_al=2.5, anode_angle_deg=12.0)
+    assert calls == []  # キャッシュヒットでSpekPyは一切呼ばれない
+    assert np.array_equal(e1, e2) and np.array_equal(w1, w2)
+
+
+def test_export_import_caches_is_a_pure_snapshot():
+    """export_caches()は呼び出し時点のスナップショット（後続のキャッシュ更新は
+    エクスポート済み辞書に反映されない）であること。"""
+    spectrum._spectrum_cache.clear()
+    spectrum._default_spectrum(kvp=70.0, filtration_mm_al=2.5, anode_angle_deg=12.0)
+    spec_cache, _ = spectrum.export_caches()
+    spectrum._default_spectrum(kvp=71.0, filtration_mm_al=2.5, anode_angle_deg=12.0)
+    assert (71.0, 2.5, 12.0) not in spec_cache

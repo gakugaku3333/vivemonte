@@ -25,6 +25,8 @@ from .physics import (isotropic_direction, sample_compton_bound,
                        sample_fluorescence, sample_rayleigh_cos_theta,
                        sample_rayleigh_element, scatter_direction)
 from .source import photon_count_through_field, sample_source_photons
+from .spectrum import export_caches as _export_spectrum_caches
+from .spectrum import import_caches as _import_spectrum_caches
 from .tally import VoxelGrid, accumulate_track_length
 from .trajectory import TrajectoryRecorder
 
@@ -281,12 +283,34 @@ def _run_batches(src: dict, geometry: Geometry, rng: np.random.Generator, n_hist
     }
 
 
+def _warm_spectrum_cache(src: dict) -> tuple[dict, dict]:
+    """スペクトル生成キャッシュ（SpekPy呼び出し）を1回だけ実際の経路で温めて
+    エクスポートする。
+
+    SpekPyのSpek()呼び出しはkvp単発でも約0.9秒かかり（chest_room実測、
+    docs/speedup_baseline/phase3_serial_timing.txt）、既存のlru_cache/dictの
+    キャッシュはプロセスローカルなため並列ワーカーはそれぞれ自前で再計算していた
+    （ヒール効果はビン数(既定15)分さらに重い）。物理条件を判定するロジックを
+    ここで複製するとバグの元なので複製せず、`sample_source_photons`をn=1で
+    実際に1回呼んで（本番と全く同じコード経路を通す）副作用でキャッシュを
+    埋め、その結果だけをエクスポートする（乱数はここ専用の使い捨てGeneratorで、
+    輸送本体の乱数列には一切触れない）。
+    """
+    sample_source_photons(src, 1, np.random.default_rng(0))
+    return _export_spectrum_caches()
+
+
 def _run_worker(scene_raw: dict, n_histories: int, seed_seq: np.random.SeedSequence,
-                 batch_size: int, dose_grid: bool, grid_resolution_cm: float) -> dict:
+                 batch_size: int, dose_grid: bool, grid_resolution_cm: float,
+                 spectrum_caches: tuple[dict, dict] | None) -> dict:
     """並列ワーカーのエントリポイント（ProcessPoolExecutorでpickleされるためモジュール
     トップレベル関数にしてある）。sceneオブジェクトではなくraw dictだけを受け取り、
     Geometry/VoxelGridはワーカー内で再構築する（設計判断5, plan_phase3_parallel.md）。
+    spectrum_cachesが渡されていれば、親プロセスで済ませたSpekPy計算結果を
+    再利用し、自前でのSpekPy再計算（数百ms〜1秒級の固定費）を省く。
     """
+    if spectrum_caches is not None:
+        _import_spectrum_caches(*spectrum_caches)
     rng = np.random.default_rng(seed_seq)
     src = scene_raw["source"]
     geometry = Geometry(scene_raw["geometry"])
@@ -321,6 +345,7 @@ def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
         for i in range(n_histories % n_workers):
             counts[i] += 1
         seed_seqs = np.random.SeedSequence(seed).spawn(n_workers)
+        spectrum_caches = _warm_spectrum_cache(src)
 
         energy_deposited: dict = {}
         n_absorbed = 0
@@ -329,7 +354,7 @@ def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
         n_fluorescence = 0
         with concurrent.futures.ProcessPoolExecutor(max_workers=n_workers) as pool:
             futures = [pool.submit(_run_worker, scene.raw, counts[i], seed_seqs[i],
-                                    batch_size, dose_grid, grid_resolution_cm)
+                                    batch_size, dose_grid, grid_resolution_cm, spectrum_caches)
                        for i in range(n_workers) if counts[i] > 0]
             # ワーカー番号順（as_completed順ではない）に消費する: 浮動小数点加算の
             # 順序を固定し、同一(seed, n_workers)の完全再現を保つため。
