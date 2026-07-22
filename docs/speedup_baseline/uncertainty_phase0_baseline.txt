@@ -1,0 +1,63 @@
+統計不確かさの一級市民化 Phase 0: ベースライン計測 (2026-07-22)
+=================================================
+
+環境: Apple Silicon, 8論理コア (Pコア4+Eコア4想定), macOS
+目的: docs/plan_statistical_uncertainty.md Phase 4 でのオーバーヘッド判定
+      （壁時間+10%以内か）の比較基準を先に固定しておく。
+      現行コード（統計機構実装前）での --dose-grid 込みの壁時間・ピークメモリ。
+
+## 条件1: chest_room.yaml, n=1e6, --dose-grid --resolution 5, workers=1
+
+コマンド:
+  .venv/bin/python -m chatcarlo run examples/chest_room.yaml -n 1e6 --seed 42 \
+      --dose-grid --resolution 5 --workers 1
+
+  real  27.57s
+  user  27.21s
+  sys    0.28s
+  peak memory footprint: 1,934,804,888 bytes (約1.80 GiB)
+  グリッド形状: (100, 100, 79) = 790,000ボクセル
+
+  吸収（光電）割合: 0.7222
+  脱出割合: 0.2778
+  平均相互作用回数/光子: 3.2459
+  蛍光X線放出イベント数: 6,612
+  最大吸収線量 [Gy/history]: 2.48077e-13
+  最大H*(10) [pSv/history]: 0.00619661
+
+## 条件2: chest_room.yaml, n=1e7, --dose-grid --resolution 5, workers=4
+
+コマンド:
+  .venv/bin/python -m chatcarlo run examples/chest_room.yaml -n 1e7 --seed 42 \
+      --dose-grid --resolution 5 --workers 4
+
+  real   82.34s
+  user  307.51s   (4ワーカー合計CPU時間)
+  sys    10.61s
+  peak memory footprint (親プロセス): 474,530,632 bytes（子プロセスの
+      ピークは/usr/bin/timeの計測範囲外。子は各自グリッド2枚を持つため
+      親より重いと推定されるが本計測では未取得——Phase 4のメモリ実測時に
+      別途 workers ごとの RSS を採る）
+  グリッド形状: (100, 100, 79) = 790,000ボクセル
+
+  吸収（光電）割合: 0.7230
+  脱出割合: 0.2770
+  平均相互作用回数/光子: 3.2481
+  蛍光X線放出イベント数: 66,756
+  最大吸収線量 [Gy/history]: 2.41722e-13
+  最大H*(10) [pSv/history]: 0.00618732
+
+## 考察
+
+条件1・条件2とも、統計値（吸収割合・脱出割合・平均相互作用回数・最大線量/H*(10)）は
+history数の違いによる統計揺らぎの範囲で一致しており、計画通り「統計機構は物理結果に
+影響しない」ことの素朴な傍証になる（本番のビット一致検証はPhase 2のテストで行う）。
+
+Phase 4でのオーバーヘッド判定基準:
+  - 条件1（workers=1, M=5想定）: real 27.57s を基準に、統計ON後の壁時間が
+    30.3s以内（+10%）なら追加最適化なしで進める。
+  - 条件2（workers=4, 各ワーカーM=13想定）: real 82.34s を基準に、
+    統計ON後の壁時間が90.6s以内（+10%）なら追加最適化なしで進める。
+  - メモリはPhase 1設計判断6の見積り「ボクセルあたり16B→約52B（3.25倍）」を
+    条件1のピーク約1.80GiBに当てはめると概算6.3GiB相当になる可能性があり、
+    Phase 4で実測して`__main__.py`の警告式（設計判断6）を裏取りすること。

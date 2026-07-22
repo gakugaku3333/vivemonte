@@ -101,25 +101,35 @@ def cmd_run(args) -> int:
     n_workers = args.workers
     if n_workers == 0:
         n_workers = os.cpu_count() or 1
+    track_uncertainty = not args.no_uncertainty
     if args.dose_grid and n_workers >= 2:
-        # 並列時はワーカーごとに線量グリッド2配列(float64)を持ち、親へpickleで
-        # 集約するため、メモリは概ね(ワーカー数+1)倍になる。部屋規模×細解像度では
-        # 容易に数GBを超える（例: chest_roomの1cm解像度で約1.6GB/ワーカー）ため
-        # 事前に見積もって警告する。
+        # 並列時はワーカーごとに線量グリッドを持ち、親へpickleで集約するため、
+        # メモリは概ね(ワーカー数+1)倍になる。部屋規模×細解像度では容易に数GBを
+        # 超える（例: chest_roomの1cm解像度で約1.6GB/ワーカー）ため事前に見積もる。
+        # ボクセルあたりのバイト数（chatcarlo/tally.pyのVoxelGrid）:
+        #   統計なし: kerma + h10 = 8*2 = 16
+        #   統計あり: 上記 + kerma_sum2 + h10_sum2 (8*2) + n_batches_hit (int32=4)
+        #             + スナップショット2枚 (8*2) = 52（約3.25倍）
+        # 親プロセスはスナップショットを確保しない（end_batchを呼ばないため遅延確保
+        # されない）ので52は親側の過大評価だが、警告としては安全側に倒す。
         import numpy as np
         from .tally import VoxelGrid
         geometry_est = Geometry(scene.raw["geometry"])
         grid_est = VoxelGrid.from_bbox(geometry_est.bbox_min, geometry_est.bbox_max,
                                         args.resolution)
-        est_gb = int(np.prod(grid_est.shape)) * 8 * 2 * (n_workers + 1) / 1e9
+        bytes_per_voxel = 52 if track_uncertainty else 16
+        est_gb = int(np.prod(grid_est.shape)) * bytes_per_voxel * (n_workers + 1) / 1e9
         if est_gb > 4.0:
+            hint = ("解像度を粗くするか、workers数を減らすか、"
+                    "--no-uncertainty で統計マップを無効化することを検討してください。"
+                    if track_uncertainty else
+                    "解像度を粗くするかworkers数を減らすことを検討してください。")
             print(f"[警告] --dose-grid（解像度{args.resolution}cm, グリッド形状"
                   f"{grid_est.shape}）と--workers {n_workers}の併用で、線量グリッドの"
-                  f"メモリ使用量が概算{est_gb:.1f}GBに達します。解像度を粗くするか"
-                  f"workers数を減らすことを検討してください。")
+                  f"メモリ使用量が概算{est_gb:.1f}GBに達します。{hint}")
     result = run_transport(scene, n_histories=int(args.n_histories), seed=args.seed,
                             dose_grid=args.dose_grid, grid_resolution_cm=args.resolution,
-                            n_workers=n_workers)
+                            n_workers=n_workers, track_uncertainty=track_uncertainty)
     print(f"histories: {result.n_histories:,}")
     print(f"吸収（光電）割合: {result.fraction_absorbed:.4f}")
     print(f"脱出割合: {result.fraction_escaped:.4f}")
@@ -267,6 +277,12 @@ def main() -> int:
     pr.add_argument("--dose-grid", action="store_true", help="ボクセル吸収線量タリーを有効化")
     pr.add_argument("--resolution", type=float, default=5.0, help="線量グリッド解像度[cm]（既定5cm）")
     pr.add_argument("--dose-out", help="線量グリッドを.npzに書き出すパス")
+    pr.add_argument("--no-uncertainty", action="store_true",
+                     help="統計不確かさ（相対誤差マップ・材料別SEM）の積算を無効化する。"
+                          "既定は有効。--dose-grid併用時は線量グリッドのメモリが"
+                          "ボクセルあたり16→52バイト（約3.25倍）になるため、"
+                          "細解像度×多ワーカーでメモリが足りない場合の逃げ道。"
+                          "物理結果（線量値そのもの）は有効/無効でビット一致する。")
     pr.add_argument("--workers", type=int, default=1,
                      help="並列ワーカー数（既定1=直列、0=CPU数自動）。マルチプロセスで"
                           "n_historiesを分散し物理は変えない。ワーカーごとにimportと"

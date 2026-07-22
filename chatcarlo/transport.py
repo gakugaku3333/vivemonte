@@ -27,7 +27,7 @@ from .physics import (isotropic_direction, sample_compton_bound,
 from .source import photon_count_through_field, sample_source_photons
 from .spectrum import export_caches as _export_spectrum_caches
 from .spectrum import import_caches as _import_spectrum_caches
-from .tally import VoxelGrid, accumulate_track_length
+from .tally import ScalarMoments, VoxelGrid, accumulate_track_length
 from .trajectory import TrajectoryRecorder
 
 
@@ -245,20 +245,37 @@ class TransportResult:
     # 実光子数、ctdi_vol_mGy指定時はCTDIファントム校正による実効光子数。
     n_photons_real: float | None = None
     n_fluorescence: int = 0
+    # 統計不確かさ（track_uncertainty=True時のみ意味を持つ、既定False扱い）。
+    # ボクセルごとのR/SEMはgrid.kerma_relative_error()等を直接呼ぶ
+    # （dose_grid=Falseならgridがそもそも無いため、材料別スカラー量のここが
+    # 唯一の統計出力になる場合がある——docs/plan_statistical_uncertainty.md参照）。
+    n_batches: int = 0
+    energy_deposited_sem_MeV: dict = field(default_factory=dict)
+    energy_deposited_rel_err: dict = field(default_factory=dict)
 
 
 def _run_batches(src: dict, geometry: Geometry, rng: np.random.Generator, n_histories: int,
-                  batch_size: int, grid: "VoxelGrid | None", fluorescence_enabled: bool) -> dict:
+                  batch_size: int, grid: "VoxelGrid | None", fluorescence_enabled: bool,
+                  track_uncertainty: bool = False) -> dict:
     """(材料別付与エネルギー, 吸収数, 脱出数, 散乱回数総和, 蛍光放出数)を1本の乱数列で積算する。
 
     直列実行・並列ワーカーの両方から共有される内側ループ本体（数値ロジックは
     run_transportの旧実装からそのまま切り出しただけで不変）。
+
+    track_uncertainty=Trueなら、バッチ境界（=history境界）ごとに
+    `grid.end_batch` と `ScalarMoments.add_batch` を呼び、バッチ統計による
+    不偏分散推定（docs/plan_statistical_uncertainty.md 設計判断2）の材料を
+    積み上げる。`transport_photons`自体は一切変更しない
+    ——乱数消費・スコアリング経路は統計機構の有無で不変（ビット一致の根拠）。
+    grid.end_batchはgrid.track_uncertainty=Falseなら常にno-opなので、
+    grid.track_uncertaintyとこの引数を独立に呼び分ける必要はない。
     """
     energy_deposited: dict = {}
     n_absorbed = 0
     n_escaped = 0
     scatter_sum = 0
     n_fluorescence = 0
+    energy_moments = ScalarMoments() if track_uncertainty else None
     remaining = n_histories
     while remaining > 0:
         n = min(batch_size, remaining)
@@ -268,6 +285,10 @@ def _run_batches(src: dict, geometry: Geometry, rng: np.random.Generator, n_hist
                                     fluorescence_enabled=fluorescence_enabled)
         for name, e_keV in result.energy_deposited.items():
             energy_deposited[name] = energy_deposited.get(name, 0.0) + e_keV
+        if track_uncertainty:
+            energy_moments.add_batch(result.energy_deposited, n)
+        if grid is not None:
+            grid.end_batch(n)
         n_fluorescence += result.n_fluorescence
         n_absorbed += int(np.sum(result.absorbed))
         n_escaped += int(np.sum(result.escaped))
@@ -280,6 +301,14 @@ def _run_batches(src: dict, geometry: Geometry, rng: np.random.Generator, n_hist
         "n_fluorescence": n_fluorescence,
         "kerma_keV": grid.kerma_keV if grid is not None else None,
         "h10_track_pSv_cm3": grid.h10_track_pSv_cm3 if grid is not None else None,
+        "kerma_sum2": grid.kerma_sum2 if (grid is not None and grid.track_uncertainty) else None,
+        "h10_sum2": grid.h10_sum2 if (grid is not None and grid.track_uncertainty) else None,
+        "n_batches_hit": grid.n_batches_hit if (grid is not None and grid.track_uncertainty) else None,
+        "grid_n_batches": grid.n_batches if grid is not None else 0,
+        "grid_n_histories": grid.n_histories if grid is not None else 0,
+        "energy_moments": energy_moments.as_moments() if track_uncertainty else None,
+        "scalar_n_batches": energy_moments.n_batches if track_uncertainty else 0,
+        "scalar_n_histories": energy_moments.n_histories if track_uncertainty else 0,
     }
 
 
@@ -302,26 +331,34 @@ def _warm_spectrum_cache(src: dict) -> tuple[dict, dict]:
 
 def _run_worker(scene_raw: dict, n_histories: int, seed_seq: np.random.SeedSequence,
                  batch_size: int, dose_grid: bool, grid_resolution_cm: float,
-                 spectrum_caches: tuple[dict, dict] | None) -> dict:
+                 spectrum_caches: tuple[dict, dict] | None, track_uncertainty: bool = False) -> dict:
     """並列ワーカーのエントリポイント（ProcessPoolExecutorでpickleされるためモジュール
     トップレベル関数にしてある）。sceneオブジェクトではなくraw dictだけを受け取り、
     Geometry/VoxelGridはワーカー内で再構築する（設計判断5, plan_phase3_parallel.md）。
     spectrum_cachesが渡されていれば、親プロセスで済ませたSpekPy計算結果を
     再利用し、自前でのSpekPy再計算（数百ms〜1秒級の固定費）を省く。
+
+    track_uncertainty=Trueなら、このワーカー自身のVoxelGrid/ScalarMomentsに
+    バッチ統計を積む（ワーカーごとに独立、親プロセス側でrun_transportが
+    ワーカー番号順に合成する。docs/plan_statistical_uncertainty.md Phase 2）。
     """
     if spectrum_caches is not None:
         _import_spectrum_caches(*spectrum_caches)
     rng = np.random.default_rng(seed_seq)
     src = scene_raw["source"]
     geometry = Geometry(scene_raw["geometry"])
-    grid = VoxelGrid.from_bbox(geometry.bbox_min, geometry.bbox_max, grid_resolution_cm) if dose_grid else None
+    grid = (VoxelGrid.from_bbox(geometry.bbox_min, geometry.bbox_max, grid_resolution_cm,
+                                 track_uncertainty=track_uncertainty)
+            if dose_grid else None)
     fluorescence_enabled = scene_raw.get("physics", {}).get("fluorescence", True)
-    return _run_batches(src, geometry, rng, n_histories, batch_size, grid, fluorescence_enabled)
+    return _run_batches(src, geometry, rng, n_histories, batch_size, grid, fluorescence_enabled,
+                         track_uncertainty=track_uncertainty)
 
 
 def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
                    batch_size: int = 200_000, dose_grid: bool = False,
-                   grid_resolution_cm: float = 5.0, n_workers: int = 1) -> TransportResult:
+                   grid_resolution_cm: float = 5.0, n_workers: int = 1,
+                   track_uncertainty: bool = True) -> TransportResult:
     """n_workers=1（既定）は直列実行で、並列化前と完全にビット一致するコードパスを通る。
 
     n_workers>=2 は `np.random.SeedSequence.spawn` でワーカー別乱数ストリームを
@@ -329,15 +366,34 @@ def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
     単純加算で集約する（設計判断はdocs/plan_phase3_parallel.md参照）。同一
     (seed, n_workers) の組では再現するが、n_workersを変えると直列/他workers数の
     結果とビット一致しない（統計的同等のみ）。
+
+    track_uncertainty=True（既定）は、バッチ境界（=history境界）ごとの
+    寄与和からバッチ統計による不偏分散推定を積み上げる
+    （docs/plan_statistical_uncertainty.md）。dose_grid=Trueならボクセルごとの
+    相対誤差が`grid.kerma_relative_error()`/`grid.h10_relative_error()`で、
+    dose_grid=Falseでも材料別付与エネルギーのSEM/Rは
+    `TransportResult.energy_deposited_sem_MeV`/`energy_deposited_rel_err`で
+    常に得られる。**totalの値（energy_deposited_MeV・grid.kerma_keV等）は
+    track_uncertaintyの有無でビット一致する**——end_batchはスナップショット
+    差分でtotalを一切書き換えないため（絶対制約、Phase 1のテストで検証済み）。
+    並列時は各ワーカーが自分のバッチ統計を独立に積み、親プロセスが
+    ワーカー番号順に合成する（`ScalarMoments.merge_from`／グリッド配列は
+    既存のkerma_keV等と同じ加算パターン）。
     """
     src = scene.raw["source"]
     geometry = Geometry(scene.raw["geometry"])
-    grid = VoxelGrid.from_bbox(geometry.bbox_min, geometry.bbox_max, grid_resolution_cm) if dose_grid else None
+    grid = (VoxelGrid.from_bbox(geometry.bbox_min, geometry.bbox_max, grid_resolution_cm,
+                                 track_uncertainty=track_uncertainty)
+            if dose_grid else None)
     fluorescence_enabled = scene.raw.get("physics", {}).get("fluorescence", True)
+    energy_moments = ScalarMoments() if track_uncertainty else None
 
     if n_workers <= 1:
         rng = np.random.default_rng(seed)
-        agg = _run_batches(src, geometry, rng, n_histories, batch_size, grid, fluorescence_enabled)
+        agg = _run_batches(src, geometry, rng, n_histories, batch_size, grid, fluorescence_enabled,
+                            track_uncertainty=track_uncertainty)
+        if track_uncertainty:
+            energy_moments.merge_from(agg["energy_moments"], agg["scalar_n_batches"], agg["scalar_n_histories"])
     else:
         import concurrent.futures
 
@@ -354,7 +410,8 @@ def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
         n_fluorescence = 0
         with concurrent.futures.ProcessPoolExecutor(max_workers=n_workers) as pool:
             futures = [pool.submit(_run_worker, scene.raw, counts[i], seed_seqs[i],
-                                    batch_size, dose_grid, grid_resolution_cm, spectrum_caches)
+                                    batch_size, dose_grid, grid_resolution_cm, spectrum_caches,
+                                    track_uncertainty)
                        for i in range(n_workers) if counts[i] > 0]
             # ワーカー番号順（as_completed順ではない）に消費する: 浮動小数点加算の
             # 順序を固定し、同一(seed, n_workers)の完全再現を保つため。
@@ -370,6 +427,14 @@ def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
                 if grid is not None:
                     grid.kerma_keV += r["kerma_keV"]
                     grid.h10_track_pSv_cm3 += r["h10_track_pSv_cm3"]
+                    if grid.track_uncertainty:
+                        grid.kerma_sum2 += r["kerma_sum2"]
+                        grid.h10_sum2 += r["h10_sum2"]
+                        grid.n_batches_hit += r["n_batches_hit"]
+                        grid.n_batches += r["grid_n_batches"]
+                        grid.n_histories += r["grid_n_histories"]
+                if track_uncertainty:
+                    energy_moments.merge_from(r["energy_moments"], r["scalar_n_batches"], r["scalar_n_histories"])
         agg = {"energy_deposited": energy_deposited, "n_absorbed": n_absorbed,
                "n_escaped": n_escaped, "scatter_sum": scatter_sum, "n_fluorescence": n_fluorescence}
 
@@ -385,6 +450,15 @@ def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
     else:
         n_photons_real = None
 
+    if track_uncertainty:
+        n_batches = energy_moments.n_batches
+        energy_deposited_sem_MeV = {k: v / 1000.0 for k, v in energy_moments.standard_errors().items()}
+        energy_deposited_rel_err = energy_moments.relative_errors()
+    else:
+        n_batches = grid.n_batches if grid is not None else 0
+        energy_deposited_sem_MeV = {}
+        energy_deposited_rel_err = {}
+
     return TransportResult(
         n_histories=n_histories,
         energy_deposited_MeV={k: v / 1000.0 for k, v in agg["energy_deposited"].items()},
@@ -394,4 +468,7 @@ def run_transport(scene, n_histories: int = 100_000, seed: int | None = None,
         grid=grid,
         n_photons_real=n_photons_real,
         n_fluorescence=agg["n_fluorescence"],
+        n_batches=n_batches,
+        energy_deposited_sem_MeV=energy_deposited_sem_MeV,
+        energy_deposited_rel_err=energy_deposited_rel_err,
     )
