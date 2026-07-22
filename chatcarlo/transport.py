@@ -226,7 +226,7 @@ def transport_photons(pos: np.ndarray, dirv: np.ndarray, energy: np.ndarray,
                 event[photo_positions_full[is_fluor[is_photo]]] = "fluorescence"
                 event[interact_positions[is_compt]] = "compton"
                 event[interact_positions[is_rayl]] = "rayleigh"
-            recorder.record(idx, o, ends, e, event)
+            recorder.record(idx, o, ends, e, event, material=mat)
 
     return BatchResult(n_scatter=n_scatter, absorbed=absorbed, escaped=escaped,
                         final_energy=energy, energy_deposited=energy_deposited,

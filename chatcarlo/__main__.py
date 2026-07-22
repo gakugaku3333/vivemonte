@@ -3,6 +3,7 @@
   python -m chatcarlo validate <scene.yaml>
   python -m chatcarlo preview  <scene.yaml> [-o out.html]
   python -m chatcarlo trace    <scene.yaml> [-n 200] [--seed 42] [-o out.html]
+  python -m chatcarlo animate  <scene.yaml> [-n 200] [--seed 42] [-o out.html]
   python -m chatcarlo plot     <dose.npz> [--scene scene.yaml] [--quantity dose|h10] [-o out.png]
   python -m chatcarlo xs <材料...> [--emin 10] [--emax 150] [-o out.png]
 """
@@ -79,6 +80,51 @@ def cmd_trace(args) -> int:
     write_html(scene, out, title=args.title or f"ChatCarlo trace — {args.scene}",
                trajectories=trajectories)
     print(f"光子{n}個の軌跡を書き出しました: {out}")
+    return 0
+
+
+_ANIMATE_MAX_N = 2000
+
+
+def cmd_animate(args) -> int:
+    import numpy as np
+
+    from .animate import CATEGORY_LABELS, categorize_trajectories, write_html
+    from .geometry import Geometry
+    from .scene import load_scene
+    from .source import sample_source_photons
+    from .trajectory import TrajectoryRecorder, trajectories_to_json
+    from .transport import transport_photons
+
+    scene = load_scene(args.scene)
+    if not scene.ok:
+        for e in scene.errors:
+            print(f"[エラー] {e}", file=sys.stderr)
+        return 1
+    for w in scene.warnings:
+        print(f"[警告] {w}")
+
+    n = int(args.n)
+    if n > _ANIMATE_MAX_N:
+        print(f"[警告] -n={n} は大きすぎるため{_ANIMATE_MAX_N}にクランプします"
+              "（HTML描画性能のため）")
+        n = _ANIMATE_MAX_N
+
+    rng = np.random.default_rng(args.seed)
+    geometry = Geometry(scene.raw["geometry"])
+    pos, dirv, energy = sample_source_photons(scene.raw["source"], n, rng)
+    recorder = TrajectoryRecorder()
+    transport_photons(pos, dirv, energy, geometry, rng, recorder=recorder)
+    trajectories = trajectories_to_json(recorder)
+
+    counts = categorize_trajectories(trajectories)
+    summary = " / ".join(f"{CATEGORY_LABELS[k]} {v}" for k, v in counts.items())
+    print(f"転帰分類: {summary}")
+
+    out = args.out or args.scene.rsplit(".", 1)[0] + "_anim.html"
+    write_html(scene, out, trajectories,
+               title=args.title or f"ChatCarlo animation — {args.scene}")
+    print(f"光子{n}個のアニメーションを書き出しました: {out}")
     return 0
 
 
@@ -269,6 +315,14 @@ def main() -> int:
     pt.add_argument("-o", "--out")
     pt.add_argument("--title")
     pt.set_defaults(func=cmd_trace)
+
+    pa = sub.add_parser("animate", help="教育用の光子軌跡アニメーションHTMLを生成（小history）")
+    pa.add_argument("scene")
+    pa.add_argument("-n", type=int, default=200, help="軌跡を記録する光子数（既定200、上限2000）")
+    pa.add_argument("--seed", type=int, default=None)
+    pa.add_argument("-o", "--out")
+    pa.add_argument("--title")
+    pa.set_defaults(func=cmd_animate)
 
     pr = sub.add_parser("run", help="光子輸送を実行")
     pr.add_argument("scene")

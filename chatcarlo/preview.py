@@ -147,10 +147,58 @@ def scene_to_json(scene: Scene, trajectories: list[dict] | None = None) -> dict:
             "warnings": [str(w) for w in scene.warnings], "trajectories": trajectories or []}
 
 
+# 俯瞰カメラの投影・描画ヘルパ（projectOrbit/poly/seg/drawAxes）。preview.pyと
+# chatcarlo/animate.pyの両方の自己完結HTMLテンプレートが埋め込む共通JSチャンク。
+# 各HTMLは外部ファイルに依存しない設計（CDN非依存・単体で開ける）ため、実行時に
+# 共有するのではなく、生成時にPython側の単一のソースから両テンプレートへ注入する
+# ことでソースの重複を避ける（出力HTMLには依然として2箇所に現れるが、それは
+# 自己完結HTMLという設計上の制約による）。
+_SHARED_CANVAS_JS = r"""// 世界座標(z上向き) → カメラ → 画面。俯瞰カメラは中心を注視して周回する。
+function projectOrbit(p) {
+  const c = DATA.center;
+  let x = p[0]-c[0], y = p[1]-c[1], z = p[2]-c[2];
+  const cy = Math.cos(yaw), sy = Math.sin(yaw);
+  let x1 = x*cy - y*sy, y1 = x*sy + y*cy;
+  const cp = Math.cos(pitch), sp = Math.sin(pitch);
+  let y2 = y1*cp - z*sp, z2 = y1*sp + z*cp;      // y2: 奥行き, z2: 上
+  const depth = y2 + dist;
+  if (depth < 1e-3) return null;
+  const w = cv.clientWidth, h = cv.clientHeight;
+  const f = 1.2 * Math.min(w, h) / (2 * Math.tan(0.35)) / dist;
+  return [w/2 + x1 * f * dist/depth + panX, h/2 - z2 * f * dist/depth + panY, depth];
+}
+
+function poly(pts, fill, alpha) {
+  const pr = pts.map(project); if (pr.some(p => !p)) return;
+  ctx.beginPath(); ctx.moveTo(pr[0][0], pr[0][1]);
+  for (let i = 1; i < pr.length; i++) ctx.lineTo(pr[i][0], pr[i][1]);
+  ctx.closePath(); ctx.globalAlpha = alpha; ctx.fillStyle = fill; ctx.fill(); ctx.globalAlpha = 1;
+}
+function seg(a, b, color, width, dash) {
+  const pa = project(a), pb = project(b); if (!pa || !pb) return;
+  ctx.beginPath(); ctx.moveTo(pa[0], pa[1]); ctx.lineTo(pb[0], pb[1]);
+  ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash || []); ctx.stroke(); ctx.setLineDash([]);
+}
+
+function drawAxes() {
+  const c = DATA.center, L = DATA.radius * 0.55;
+  const o = [c[0], c[1], c[2]];
+  const ax = [[[L,0,0],'#ef4444','X'], [[0,L,0],'#22c55e','Y'], [[0,0,L],'#3b82f6','Z']];
+  for (const [d, col, name] of ax) {
+    const e = [o[0]+d[0], o[1]+d[1], o[2]+d[2]];
+    seg(o, e, col, 1.5);
+    const p = project(e);
+    if (p) { ctx.fillStyle = col; ctx.font = '11px sans-serif'; ctx.fillText(name, p[0]+4, p[1]-4); }
+  }
+}
+"""
+
+
 def render_html(scene: Scene, title: str = "ChatCarlo geometry preview",
                  trajectories: list[dict] | None = None) -> str:
     data = json.dumps(scene_to_json(scene, trajectories=trajectories), ensure_ascii=False)
-    return _TEMPLATE.replace("__TITLE__", title).replace("__DATA__", data)
+    return (_TEMPLATE.replace("__TITLE__", title).replace("__DATA__", data)
+            .replace("__SHARED_CANVAS_JS__", _SHARED_CANVAS_JS))
 
 
 def write_html(scene: Scene, out_path: str, title: str = "ChatCarlo geometry preview",
@@ -240,44 +288,10 @@ addEventListener('mousemove', e => {
 });
 cv.addEventListener('wheel', e => { e.preventDefault(); dist *= Math.exp(e.deltaY * 0.001); draw(); }, {passive:false});
 
-// 世界座標(z上向き) → カメラ → 画面。カメラは中心を注視して周回。
-function project(p) {
-  const c = DATA.center;
-  let x = p[0]-c[0], y = p[1]-c[1], z = p[2]-c[2];
-  const cy = Math.cos(yaw), sy = Math.sin(yaw);
-  let x1 = x*cy - y*sy, y1 = x*sy + y*cy;
-  const cp = Math.cos(pitch), sp = Math.sin(pitch);
-  let y2 = y1*cp - z*sp, z2 = y1*sp + z*cp;      // y2: 奥行き, z2: 上
-  const depth = y2 + dist;
-  if (depth < 1e-3) return null;
-  const w = cv.clientWidth, h = cv.clientHeight;
-  const f = 1.2 * Math.min(w, h) / (2 * Math.tan(0.35)) / dist;
-  return [w/2 + x1 * f * dist/depth + panX, h/2 - z2 * f * dist/depth + panY, depth];
-}
-
-function poly(pts, fill, alpha) {
-  const pr = pts.map(project); if (pr.some(p => !p)) return;
-  ctx.beginPath(); ctx.moveTo(pr[0][0], pr[0][1]);
-  for (let i = 1; i < pr.length; i++) ctx.lineTo(pr[i][0], pr[i][1]);
-  ctx.closePath(); ctx.globalAlpha = alpha; ctx.fillStyle = fill; ctx.fill(); ctx.globalAlpha = 1;
-}
-function seg(a, b, color, width, dash) {
-  const pa = project(a), pb = project(b); if (!pa || !pb) return;
-  ctx.beginPath(); ctx.moveTo(pa[0], pa[1]); ctx.lineTo(pb[0], pb[1]);
-  ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash || []); ctx.stroke(); ctx.setLineDash([]);
-}
-
-function drawAxes() {
-  const c = DATA.center, L = DATA.radius * 0.55;
-  const o = [c[0], c[1], c[2]];
-  const ax = [[[L,0,0],'#ef4444','X'], [[0,L,0],'#22c55e','Y'], [[0,0,L],'#3b82f6','Z']];
-  for (const [d, col, name] of ax) {
-    const e = [o[0]+d[0], o[1]+d[1], o[2]+d[2]];
-    seg(o, e, col, 1.5);
-    const p = project(e);
-    if (p) { ctx.fillStyle = col; ctx.font = '11px sans-serif'; ctx.fillText(name, p[0]+4, p[1]-4); }
-  }
-}
+__SHARED_CANVAS_JS__
+// previewは単一の俯瞰カメラしか持たないため、projectはprojectOrbitへそのまま委譲する
+// （animate.pyは対向リレー/一人称も含む複数カメラの切替ディスパッチャとして持つ）。
+function project(p) { return projectOrbit(p); }
 
 function draw() {
   const w = cv.clientWidth, h = cv.clientHeight;

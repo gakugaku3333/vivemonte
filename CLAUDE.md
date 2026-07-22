@@ -51,6 +51,12 @@ python3 -m venv .venv
 # photon trajectory 3D visualization (small n; overlays onto the preview HTML template)
 .venv/bin/python -m chatcarlo trace examples/chest_room.yaml -n 200 --seed 42 -o trace.html
 
+# educational photon-trajectory ANIMATION (small n; playback with orbit/relay/first-person
+# cameras, time compression + slow-mo at interactions, HUD, raw-data mode — see
+# docs/plan_photon_animation.md). Separate from `trace` (a static overlay); `animate` replays
+# the same recorder log over a timeline instead.
+.venv/bin/python -m chatcarlo animate examples/chest_room.yaml -n 200 --seed 42 -o anim.html
+
 # cross-section slices through a dose/H*(10) map (default: 3 planes through the max-value voxel)
 .venv/bin/python -m chatcarlo plot dose.npz --scene examples/chest_room.yaml -o maps.png
 
